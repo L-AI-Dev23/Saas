@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { topbarModules, getActiveModuleHref } from "@/lib/nav-config";
+import { IconButton } from "@/components/animate-ui/components/buttons/icon";
 
 export function DashboardTopbar() {
   const pathname = usePathname();
@@ -50,9 +51,13 @@ export function DashboardTopbar() {
             <MessageCircle size={16} />
             Soporte en vivo
           </a>
-          <button className="text-white/80 hover:text-white">
+          <IconButton
+            variant="ghost"
+            aria-label="Notificaciones"
+            className="text-white/80 hover:text-white hover:bg-white/10"
+          >
             <Bell size={18} />
-          </button>
+          </IconButton>
           <div className="h-8 w-8 shrink-0 rounded-full bg-white/20" />
         </div>
       </div>

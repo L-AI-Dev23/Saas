@@ -1,5 +1,5 @@
 import { Plus, Mail, MoreVertical } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/animate-ui/components/buttons/button";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { emailPlantillas } from "@/lib/mock-data";
 

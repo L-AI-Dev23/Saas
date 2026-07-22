@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

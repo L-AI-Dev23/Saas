@@ -1,5 +1,5 @@
 import { MessageSquare, KeyRound, Sparkles, ShoppingBag, ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/animate-ui/components/buttons/button";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { ChatbotConfigModal } from "@/components/dashboard/ChatbotConfigModal";
 import { chatbotTemplates } from "@/lib/mock-data";

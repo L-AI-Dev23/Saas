@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
-import { Bell, LogOut, Moon, Sun } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { actividadReciente } from "@/lib/mock-data";
 import {
   DropdownMenu,
@@ -13,18 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/animate-ui/components/radix/dropdown-menu";
-
-const actionButtonClass =
-  "flex size-8 shrink-0 items-center justify-center rounded-md text-text-secondary outline-hidden transition-colors hover:bg-dashboard-bg hover:text-text-primary focus-visible:bg-dashboard-bg focus-visible:text-text-primary [&>svg]:size-4 [&>svg]:shrink-0";
+import { IconButton } from "@/components/animate-ui/components/buttons/icon";
+import { ThemeTogglerButton } from "@/components/animate-ui/components/buttons/theme-toggler";
 
 export function TopbarActions() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
-
-  // Evita mismatch de hidratación: el icono de tema depende de localStorage,
-  // que no existe en el render del servidor.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const notificaciones = actividadReciente.slice(0, 4);
 
@@ -33,9 +24,9 @@ export function TopbarActions() {
       {/* Notificaciones */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button type="button" className={actionButtonClass} aria-label="Notificaciones">
+          <IconButton variant="ghost" aria-label="Notificaciones">
             <Bell />
-          </button>
+          </IconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={8} className="w-80">
           <DropdownMenuLabel className="px-2 py-1.5 text-sm font-semibold text-text-primary">
@@ -54,24 +45,16 @@ export function TopbarActions() {
       </DropdownMenu>
 
       {/* Modo oscuro */}
-      <button
-        type="button"
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className={actionButtonClass}
-        aria-label="Cambiar tema"
-      >
-        {mounted && theme === "dark" ? <Sun /> : <Moon />}
-      </button>
+      <ThemeTogglerButton variant="ghost" aria-label="Cambiar tema" />
 
       {/* Cerrar sesión */}
-      <button
-        type="button"
+      <IconButton
+        variant="ghost"
         onClick={() => router.push("/")}
-        className={actionButtonClass}
         aria-label="Cerrar sesión"
       >
         <LogOut />
-      </button>
+      </IconButton>
     </div>
   );
 }
