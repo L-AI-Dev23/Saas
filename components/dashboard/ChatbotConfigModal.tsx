@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/animate-ui/components/radix/dialog";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
 import { productos } from "@/lib/mock-data";
 import { Checkbox } from "@/components/base/checkbox/checkbox";

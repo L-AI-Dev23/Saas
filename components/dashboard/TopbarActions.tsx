@@ -15,7 +15,7 @@ import {
 } from "@/components/animate-ui/components/radix/dropdown-menu";
 
 const actionButtonClass =
-  "flex size-9 shrink-0 items-center justify-center rounded-lg text-text-secondary outline-hidden transition-colors hover:bg-dashboard-bg hover:text-text-primary focus-visible:bg-dashboard-bg focus-visible:text-text-primary";
+  "flex size-8 shrink-0 items-center justify-center rounded-md text-text-secondary outline-hidden transition-colors hover:bg-dashboard-bg hover:text-text-primary focus-visible:bg-dashboard-bg focus-visible:text-text-primary [&>svg]:size-4 [&>svg]:shrink-0";
 
 export function TopbarActions() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export function TopbarActions() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className={actionButtonClass} aria-label="Notificaciones">
-            <Bell size={18} />
+            <Bell />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={8} className="w-80">
@@ -60,7 +60,7 @@ export function TopbarActions() {
         className={actionButtonClass}
         aria-label="Cambiar tema"
       >
-        {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        {mounted && theme === "dark" ? <Sun /> : <Moon />}
       </button>
 
       {/* Cerrar sesión */}
@@ -70,7 +70,7 @@ export function TopbarActions() {
         className={actionButtonClass}
         aria-label="Cerrar sesión"
       >
-        <LogOut size={18} />
+        <LogOut />
       </button>
     </div>
   );

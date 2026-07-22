@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/animate-ui/components/radix/dialog";
 
 export function RegisterDialog({ children }: { children: React.ReactNode }) {
   return (
