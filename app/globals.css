@@ -1,0 +1,428 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ==========================================================================
+   0. FUENTE ONEST (styleguide del sitio de referencia)
+   Cargada vía @font-face directo (archivos .ttf de Google Fonts/gstatic)
+   para no depender de una descarga en build time.
+   ========================================================================== */
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/onest/v9/gNMZW3F-SZuj7zOT0IfSjTS16cPh9R-ZshFMQWXgSQ.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/onest/v9/gNMZW3F-SZuj7zOT0IfSjTS16cPhxx-ZshFMQWXgSQ.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/onest/v9/gNMZW3F-SZuj7zOT0IfSjTS16cPhKxiZshFMQWXgSQ.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/onest/v9/gNMZW3F-SZuj7zOT0IfSjTS16cPhEhiZshFMQWXgSQ.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/onest/v9/gNMZW3F-SZuj7zOT0IfSjTS16cPhdRiZshFMQWXgSQ.ttf") format("truetype");
+}
+
+/* Esta línea activa el modo oscuro cuando el HTML tiene la clase "dark" */
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   1. VARIABLES DE TAILWIND (@theme)
+   Aquí defines colores ESTÁTICOS (que no cambian entre claro/oscuro).
+   Al escribirlos aquí, Tailwind automáticamente crea clases para ellos.
+   Ejemplo: "--color-success" te permite usar la clase "bg-success" o "text-success".
+   ========================================================================== */
+@theme {
+  /* Fondos y superficies básicas (styleguide: light mode) */
+  --color-background: #ffffff; /* Fondo puro */
+  --color-surface: #fafafa;    /* neutral-secondary-soft (skill shadcn) */
+  --color-border: #e4e4e7;     /* border-default (skill shadcn) */
+  --color-border-strong: #d4d4d8; /* border-default-strong — hover de inputs/cards */
+
+  /* Textos — afinados con la escala zinc del skill "shadcn" (colors.md) */
+  --color-text-primary: #09090b;   /* heading — texto principal */
+  --color-text-secondary: #71717a; /* body — texto secundario, subtítulos */
+  --color-text-muted: #a1a1aa;     /* body-subtle — texto apagado o deshabilitado */
+
+  /* Colores de Acento — extraídos del styleguide de referencia */
+  --color-accent: #f65858;            /* Rojo/coral de acento del styleguide */
+  --color-accent-hover: #e14444;      /* Variante más oscura para hover */
+  --color-accent-foreground: #ffffff; /* Texto blanco sobre el acento */
+  --color-link: #009fc1;              /* Color de enlaces secundarios del styleguide */
+
+  /* Colores Semánticos (Para mensajes de estado) */
+  --color-success: #16a34a;
+  --color-warning: #ca8a04;
+  --color-error: #dc2626;
+
+  /* ==========================================================================
+     COLORES DEL DASHBOARD (/home)
+     Todo lo que ves en el panel (topbar, sidebar, botones "importantes" como
+     "Agregar bot" o "Comprar") usa estos tokens. Cambia el valor aquí y se
+     actualiza en TODO el dashboard automáticamente, sin tocar componentes.
+     ========================================================================== */
+  --color-dashboard-bg: #fafafa;          /* Fondo general detrás del topbar/sidebar — gris muy claro, estilo Vercel */
+  --color-dashboard-topbar: #ffffff;      /* Topbar blanco con borde inferior, no azul */
+  --color-dashboard-active: #f4f4f5;      /* Fondo del ítem activo del sidebar — gris claro sutil */
+  --color-cta: #18181b;                   /* Botones importantes: negro sólido, estilo Vercel */
+  --color-cta-hover: #000000;             /* Hover de esos botones */
+
+  /* Tipografías base — Onest según styleguide, con fallbacks originales */
+  --font-sans: "Onest", "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Espaciados extraídos del styleguide (prefijo "sg" para no chocar con
+     la escala --spacing-* que Tailwind usa también para max-w-*, w-*, etc.) */
+  --spacing-sg-xs: 6px;
+  --spacing-sg-sm: 14px;
+  --spacing-sg-md: 30px;
+  --spacing-sg-lg: 50px;
+  --spacing-sg-xl: 120px;
+
+  /* Sombras — escala del skill "shadcn" (shadows.md), más sutil y consistente */
+  --shadow-sg-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sg-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+  --shadow-sg-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-sg-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+
+  /* Glint — realce sutil en botones sólidos (buttons.md del skill shadcn) */
+  --color-1-400: rgba(255, 255, 255, 0.06);
+  --color-1-700: rgba(0, 0, 0, 0.04);
+  --shadow-glint: var(--shadow-sg-2xs), inset var(--color-1-400) 0 6px 0px -5px, var(--color-1-700) 0 4px 10px -5px;
+
+  /* ==========================================================================
+     TOKENS DE UNTITLED UI (kit de componentes en components/base y
+     components/application). Estos nombres son cortos y genéricos
+     ("primary", "secondary", "tertiary"...) así que para no chocar con la
+     paleta de shadcn de arriba (que ya usa "primary"/"secondary" para el
+     rojo de marca), las clases del kit fueron renombradas a "uui-primary" /
+     "uui-secondary" dentro de components/base, components/application y
+     components/foundations. Aquí se definen esos y el resto de tokens
+     semánticos que el kit necesita, mapeados a la paleta zinc + coral que
+     ya usa el resto del dashboard.
+     ========================================================================== */
+
+  /* Superficies neutras */
+  --color-uui-primary: #ffffff;       /* fondo de tarjetas/inputs */
+  --color-uui-secondary: #fafafa;     /* fondo secundario sutil */
+  --color-primary_alt: #ffffff;
+  --color-primary_hover: #f4f4f5;
+  --color-secondary_alt: #fafafa;
+  --color-tertiary: #f4f4f5;
+  --color-quaternary: #e4e4e7;
+  --color-uui-tertiary: #71717a;
+  --color-uui-tertiary_hover: #3f3f46;
+  --color-uui-quaternary: #a1a1aa;
+  --color-border-uui-primary: #e4e4e7;
+  --color-border-uui-secondary: #f4f4f5;
+  --color-dark: #18181b;
+
+  /* Texto */
+  --color-fg-secondary: #3f3f46;
+  --color-fg-secondary_hover: #18181b;
+  --color-fg-tertiary: #71717a;
+  --color-fg-quaternary: #a1a1aa;
+  --color-fg-quaternary_hover: #71717a;
+  --color-fg-white: #ffffff;
+  --color-fg-uui-primary: #18181b;    /* Texto principal sobre fondos uui (antes confundido con --color-uui-primary blanco) */
+  --color-fg-uui-secondary: #3f3f46;  /* Texto secundario sobre fondos uui */
+  --color-placeholder: #a1a1aa;
+  --color-tertiary_hover: #3f3f46;
+  --color-secondary_hover: #18181b;
+
+  /* Marca — reutiliza el negro "cta" del dashboard para estados sólidos
+     (toggles/checkbox activados, focus ring) y el coral de acento para
+     textos con énfasis de marca, igual que en el resto de /home. */
+  --color-brand-solid: var(--color-cta);
+  --color-brand-solid_hover: var(--color-cta-hover);
+  --color-brand-primary_alt: #fef2f2;
+  --color-brand-secondary: var(--color-accent);
+  --color-brand-secondary_hover: var(--color-accent-hover);
+  --color-brand-tertiary: var(--color-accent);
+  --color-fg-brand-primary: var(--color-accent);
+  --color-fg-brand-secondary_alt: var(--color-accent-hover);
+  --color-fg-brand-secondary_hover: var(--color-accent-hover);
+  --color-focus-ring: var(--color-cta);
+  --color-brand: var(--color-cta);
+
+  /* Semánticos: error / éxito / advertencia */
+  --color-error-primary: var(--color-error);
+  --color-error-primary_hover: #b91c1c;
+  --color-error-secondary: #fee2e2;
+  --color-error-solid: var(--color-error);
+  --color-error-solid_hover: #b91c1c;
+  --color-error_subtle: #fecaca;
+  --color-fg-error-primary: var(--color-error);
+  --color-fg-error-secondary: #b91c1c;
+  --color-success-primary: var(--color-success);
+  --color-success-secondary: #dcfce7;
+  --color-success-solid: var(--color-success);
+  --color-fg-success-primary: var(--color-success);
+  --color-warning-secondary: #fef9c3;
+  --color-warning-solid: var(--color-warning);
+  --color-fg-warning-primary: var(--color-warning);
+
+  /* Toggle (interruptor deslizante) */
+  --color-toggle-border: #e4e4e7;
+  --color-toggle-slim-border_pressed: var(--color-cta);
+  --color-toggle-slim-border_pressed-hover: var(--color-cta-hover);
+
+  /* Featured icon (usado dentro del file-uploader) */
+  --color-featured-icon-light-fg-brand: var(--color-accent);
+  --color-featured-icon-light-fg-error: var(--color-error);
+  --color-featured-icon-light-fg-gray: #52525b;
+  --color-featured-icon-light-fg-success: var(--color-success);
+  --color-featured-icon-light-fg-warning: var(--color-warning);
+  --color-uui-secondary-solid: #71717a;
+
+  /* Paleta "utility" (variantes de color de iconos/badges, poco usadas hoy) */
+  --color-utility-brand-50: #fef2f2;
+  --color-utility-brand-100: #fde8e8;
+  --color-utility-brand-200: #fbd2d2;
+  --color-utility-brand-400: var(--color-accent);
+  --color-utility-brand-500: var(--color-accent);
+  --color-utility-brand-700: var(--color-accent-hover);
+  --color-utility-neutral-50: #fafafa;
+  --color-utility-neutral-100: #f4f4f5;
+  --color-utility-neutral-200: #e4e4e7;
+  --color-utility-neutral-400: #a1a1aa;
+  --color-utility-neutral-500: #71717a;
+  --color-utility-neutral-700: #3f3f46;
+  --color-utility-red-50: #fef2f2;
+  --color-utility-red-100: #fee2e2;
+  --color-utility-red-200: #fecaca;
+  --color-utility-red-400: #f87171;
+  --color-utility-red-500: var(--color-error);
+  --color-utility-red-700: #b91c1c;
+  --color-utility-green-50: #f0fdf4;
+  --color-utility-green-100: #dcfce7;
+  --color-utility-green-200: #bbf7d0;
+  --color-utility-green-400: #4ade80;
+  --color-utility-green-500: var(--color-success);
+  --color-utility-green-700: #15803d;
+  --color-utility-yellow-50: #fefce8;
+  --color-utility-yellow-100: #fef9c3;
+  --color-utility-yellow-200: #fef08a;
+  --color-utility-yellow-400: #facc15;
+  --color-utility-yellow-500: var(--color-warning);
+  --color-utility-yellow-700: #a16207;
+  --color-utility-blue-50: #eff6ff;
+  --color-utility-blue-100: #dbeafe;
+  --color-utility-blue-200: #bfdbfe;
+  --color-utility-blue-400: #60a5fa;
+  --color-utility-blue-500: var(--color-link);
+  --color-utility-blue-700: #0369a1;
+  --color-utility-indigo-50: #eef2ff;
+  --color-utility-indigo-100: #e0e7ff;
+  --color-utility-indigo-200: #c7d2fe;
+  --color-utility-indigo-400: #818cf8;
+  --color-utility-indigo-500: #6366f1;
+  --color-utility-indigo-700: #4338ca;
+  --color-utility-purple-50: #faf5ff;
+  --color-utility-purple-100: #f3e8ff;
+  --color-utility-purple-200: #e9d5ff;
+  --color-utility-purple-400: #c084fc;
+  --color-utility-purple-500: #a855f7;
+  --color-utility-purple-700: #7e22ce;
+  --color-utility-pink-50: #fdf2f8;
+  --color-utility-pink-100: #fce7f3;
+  --color-utility-pink-200: #fbcfe8;
+  --color-utility-pink-400: #f472b6;
+  --color-utility-pink-500: #ec4899;
+  --color-utility-pink-700: #be185d;
+  --color-utility-orange-50: #fff7ed;
+  --color-utility-orange-100: #ffedd5;
+  --color-utility-orange-200: #fed7aa;
+  --color-utility-orange-400: #fb923c;
+  --color-utility-orange-500: #f97316;
+  --color-utility-orange-700: #c2410c;
+  --color-utility-sky-50: #f0f9ff;
+  --color-utility-sky-100: #e0f2fe;
+  --color-utility-sky-200: #bae6fd;
+  --color-utility-sky-400: #38bdf8;
+  --color-utility-sky-500: #0ea5e9;
+  --color-utility-sky-700: #0369a1;
+  --color-utility-slate-50: #f8fafc;
+  --color-utility-slate-100: #f1f5f9;
+  --color-utility-slate-200: #e2e8f0;
+  --color-utility-slate-400: #94a3b8;
+  --color-utility-slate-500: #64748b;
+  --color-utility-slate-700: #334155;
+}
+
+/* ==========================================================================
+   2. ENLACE ENTRE SHADCN Y TAILWIND (@theme inline)
+   Esta sección es un "traductor". Toma las variables dinámicas que están más 
+   abajo en el :root (modo claro) y .dark (modo oscuro) y las convierte en 
+   clases de Tailwind que puedes escribir en tus componentes.
+   Ejemplo: Convierte el "--primary" de abajo en la clase "bg-primary".
+   NO necesitas tocar esta sección casi nunca, a menos que crees una variable nueva.
+   ========================================================================== */
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  
+  /* Tamaños de los bordes redondeados (rounded-md, rounded-lg, etc.) */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ==========================================================================
+   3. MODO CLARO (:root)
+   Aquí defines los colores usando el formato OKLCH. 
+   Estos colores se activan cuando la web está de día (Light Mode).
+   ========================================================================== */
+:root {
+  --background: oklch(0.99 0 0);          /* Fondo general de la web */
+  --foreground: oklch(0.145 0 0);         /* Texto general */
+  --card: oklch(0.98 0 0);                /* Fondo de las tarjetas */
+  --card-foreground: oklch(0.145 0 0);    /* Texto dentro de las tarjetas */
+  --popover: oklch(1 0 0);                /* Fondo de los menús desplegables */
+  --popover-foreground: oklch(0.145 0 0); /* Texto de menús desplegables */
+  
+  /* COLOR DE LA MARCA — rojo/coral #f65858 tomado del styleguide */
+  --primary: oklch(0.6523 0.1998 21.32);  /* #f65858 en OKLCH */
+  --primary-foreground: oklch(1 0 0);     /* Texto blanco dentro del botón principal */
+  
+  --secondary: oklch(0.97 0 0);           /* Botones secundarios (grises claros) */
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);               /* Fondos para zonas apagadas */
+  --muted-foreground: oklch(0.556 0 0);   /* Texto apagado */
+  --accent: oklch(0.6523 0.1998 21.32);   /* Mismo rojo de marca */
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.577 0.245 27.325); /* Botón de eliminar (Rojo) */
+  --border: oklch(0.922 0 0);             /* Bordes de tablas y divisiones */
+  --input: oklch(0.922 0 0);              /* Bordes de los inputs de texto */
+  --ring: oklch(0.708 0 0);               /* Anillo de brillo al enfocar un botón */
+  
+  /* Colores para Gráficos */
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  
+  --radius: 0.5rem;                       /* 8px, tomado del styleguide (borderRadius de botones/cards) */
+  
+  /* Colores del Sidebar (Barra lateral) */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.93 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.93 0 0);
+  --sidebar-accent-foreground: oklch(0.145 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* ==========================================================================
+   4. MODO OSCURO (.dark)
+   Aquí defines cómo se transforman los colores de arriba cuando la web 
+   pasa a modo noche (Dark Mode).
+   ========================================================================== */
+.dark {
+  --background: oklch(0.145 0 0);         /* Fondo se vuelve oscuro */
+  --foreground: oklch(0.985 0 0);         /* Texto se vuelve claro */
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  
+  /* Color principal en modo oscuro */
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);           /* Bordes transparentes para que no chillen */
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ==========================================================================
+   5. REGLAS BASE
+   Aplica estos estilos básicos a toda la página por defecto.
+   ========================================================================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50; /* Todos los elementos usan los bordes definidos arriba */
+  }
+  body {
+    @apply bg-background text-foreground; /* El cuerpo toma el fondo general y texto general */
+  }
+  html {
+    @apply font-sans; /* Aplica la fuente principal a todo el HTML */
+  }
+}

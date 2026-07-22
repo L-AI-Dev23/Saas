@@ -1,0 +1,34 @@
+# ==========================================================================
+# ARCHIVO ROBOTS.TXT - CONTROL DE RASTREO PARA SEO
+# Ubicación: public/robots.txt
+# ==========================================================================
+
+# 1. REGLAS GENERALES PARA TODOS LOS AGENTES (Google, Bing, DuckDuckGo, etc.)
+User-agent: *
+
+# Permitir que los buscadores rastreen e indexen todo el sitio web público
+Allow: /
+
+# 🚫 RUTAS BLOQUEADAS (Para evitar contenido duplicado o basura en Google)
+# Bloqueamos archivos de configuración temporal que Google no necesita leer
+Disallow: /_next/static/cp/
+Disallow: /_next/static/chunks/
+
+# ⚠️ INSTRUCCIÓN PARA EL CLIENTE:
+# Si la página web de tu cliente llega a tener una sección privada, un formulario 
+# de agradecimiento que no debe indexarse, o páginas de prueba, agrégalas abajo.
+# Ejemplos:
+# Disallow: /gracias-por-tu-compra   <- Evita que la gente entre sin pagar
+# Disallow: /test-diseño/            <- Evita que Google indexe una página de prueba
+Disallow: /api/                      <- Oculta las rutas internas de tu servidor de Next.js
+
+
+# ==========================================================================
+# 2. ENLACE AL SITEMAP (El mapa de tu sitio web)
+# ==========================================================================
+# Esto le dice a Google exactamente dónde está la lista de todas tus páginas 
+# (Inicio, Nosotros, Contacto, etc.) para que las indexe en un solo día.
+#
+# ⚠️ INSTRUCCIÓN CUANDO ENTREGUES LA WEB:
+# Reemplaza "www.la-web-de-tu-cliente.com" por el dominio real que le compres a tu cliente.
+Sitemap: https://www.la-web-de-tu-cliente.com/sitemap.xml
