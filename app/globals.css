@@ -308,7 +308,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-foreground: var(--foreground);
-  
+
   /* Tamaños de los bordes redondeados (rounded-md, rounded-lg, etc.) */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -317,6 +317,15 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-invert-foreground: var(--invert-foreground);
+  --color-invert: var(--invert);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning: var(--warning);
+  --color-info-foreground: var(--info-foreground);
+  --color-info: var(--info);
+  --color-success-foreground: var(--success-foreground);
+  --color-success: var(--success);
+  --color-destructive-foreground: var(--destructive-foreground);
 }
 
 /* ==========================================================================
@@ -331,11 +340,11 @@
   --card-foreground: oklch(0.145 0 0);    /* Texto dentro de las tarjetas */
   --popover: oklch(1 0 0);                /* Fondo de los menús desplegables */
   --popover-foreground: oklch(0.145 0 0); /* Texto de menús desplegables */
-  
+
   /* COLOR DE LA MARCA — rojo/coral #f65858 tomado del styleguide */
   --primary: oklch(0.6523 0.1998 21.32);  /* #f65858 en OKLCH */
   --primary-foreground: oklch(1 0 0);     /* Texto blanco dentro del botón principal */
-  
+
   --secondary: oklch(0.97 0 0);           /* Botones secundarios (grises claros) */
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);               /* Fondos para zonas apagadas */
@@ -346,16 +355,16 @@
   --border: oklch(0.922 0 0);             /* Bordes de tablas y divisiones */
   --input: oklch(0.922 0 0);              /* Bordes de los inputs de texto */
   --ring: oklch(0.708 0 0);               /* Anillo de brillo al enfocar un botón */
-  
+
   /* Colores para Gráficos */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  
+
   --radius: 0.5rem;                       /* 8px, tomado del styleguide (borderRadius de botones/cards) */
-  
+
   /* Colores del Sidebar (Barra lateral) */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -365,6 +374,15 @@
   --sidebar-accent-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --destructive-foreground: var(--color-red-800);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-900);
+  --info: var(--color-violet-500);
+  --info-foreground: var(--color-violet-900);
+  --warning: var(--color-yellow-500);
+  --warning-foreground: var(--color-yellow-900);
+  --invert: var(--color-zinc-900);
+  --invert-foreground: var(--color-zinc-50);
 }
 
 /* ==========================================================================
@@ -379,11 +397,11 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  
+
   /* Color principal en modo oscuro */
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
-  
+
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -394,13 +412,13 @@
   --border: oklch(1 0 0 / 10%);           /* Bordes transparentes para que no chillen */
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  
+
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -409,6 +427,15 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --destructive-foreground: var(--color-red-600);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-600);
+  --info: var(--color-violet-500);
+  --info-foreground: var(--color-violet-600);
+  --warning: var(--color-yellow-500);
+  --warning-foreground: var(--color-yellow-600);
+  --invert: var(--color-zinc-700);
+  --invert-foreground: var(--color-zinc-50);
 }
 
 /* ==========================================================================
