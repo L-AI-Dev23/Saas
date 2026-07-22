@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
 import { productos, categorias } from "@/lib/mock-data";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
 import { cn } from "@/lib/utils";
@@ -53,7 +53,10 @@ export default function ProductosPage() {
                     <SelectDropdown options={nombresCategorias} value={categoria} onChange={setCategoria} />
                   </div>
                 </div>
-                <Checkbox defaultSelected label="Sin control de stock" />
+                <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+                  <Checkbox defaultChecked />
+                  Sin control de stock
+                </label>
                 <div className="flex flex-col gap-1.5">
                   <Label>Imágenes</Label>
                   <FileUploadDropZone accept="image/*" hint="SVG, PNG, JPG o GIF (máx. 5MB)" maxSize={5 * 1024 * 1024} />

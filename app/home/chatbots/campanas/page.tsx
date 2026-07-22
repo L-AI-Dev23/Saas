@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { chatbotCampanas, chatbotsActivos } from "@/lib/mock-data";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 
 export default function ChatbotCampanasPage() {
   return (
@@ -45,7 +45,13 @@ export default function ChatbotCampanasPage() {
                   <Label>Chatbots a agrupar</Label>
                   <div className="flex flex-col gap-1 rounded-lg border border-border p-2">
                     {chatbotsActivos.map((b) => (
-                      <Checkbox key={b.id} label={b.nombre} className="rounded-md px-2 py-1.5 hover:bg-surface" />
+                      <label
+                        key={b.id}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface"
+                      >
+                        <Checkbox />
+                        {b.nombre}
+                      </label>
                     ))}
                   </div>
                 </div>

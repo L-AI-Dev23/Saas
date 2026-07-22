@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { equipo } from "@/lib/mock-data";
 
 const modulosDisponibles = ["Inbox", "Email", "Automatizaciones", "Chatbots", "CRM", "Catálogo"];
@@ -49,7 +49,13 @@ export default function EquipoPage() {
                   <Label>Módulos habilitados</Label>
                   <div className="grid grid-cols-2 gap-1">
                     {modulosDisponibles.map((m) => (
-                      <Checkbox key={m} label={m} className="rounded-md px-2 py-1.5 hover:bg-surface" />
+                      <label
+                        key={m}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface"
+                      >
+                        <Checkbox />
+                        {m}
+                      </label>
                     ))}
                   </div>
                   <p className="text-xs text-text-muted">Configuración queda reservada solo para administradores.</p>

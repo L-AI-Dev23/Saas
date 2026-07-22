@@ -14,7 +14,7 @@ import {
 } from "@/components/animate-ui/components/radix/dialog";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
 import { productos } from "@/lib/mock-data";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { X } from "lucide-react";
 
@@ -164,8 +164,8 @@ export function ChatbotConfigModal({
                 {productos.map((p) => (
                   <label key={p.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-surface">
                     <Checkbox
-                      isSelected={selectedProducts.includes(p.id)}
-                      onChange={() =>
+                      checked={selectedProducts.includes(p.id)}
+                      onCheckedChange={() =>
                         setSelectedProducts((sp) =>
                           sp.includes(p.id) ? sp.filter((id) => id !== p.id) : [...sp, p.id]
                         )

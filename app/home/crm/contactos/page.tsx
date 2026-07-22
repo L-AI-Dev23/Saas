@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Table2, Kanban, X } from "lucide-react";
+import { Plus, Table2, Kanban } from "lucide-react";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -9,6 +9,12 @@ import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
 import { contactos } from "@/lib/mock-data";
 import { Tabs, TabList } from "@/components/application/tabs/tabs";
 import { TextArea } from "@/components/base/textarea/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/animate-ui/components/radix/sheet";
 import { cn } from "@/lib/utils";
 
 const etapas = [
@@ -127,68 +133,64 @@ export default function ContactosPage() {
       )}
 
       {/* Drawer de detalle */}
-      {selected && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/20" onClick={() => setSelected(null)}>
-          <div
-            className="flex h-full w-full max-w-md flex-col bg-white p-6 shadow-sg-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-text-primary">{selected.nombre}</h2>
-              <button onClick={() => setSelected(null)} className="text-text-muted hover:text-text-primary">
-                <X size={18} />
-              </button>
-            </div>
+      <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <SheetContent side="right" className="max-w-md gap-0 p-6">
+          {selected && (
+            <>
+              <SheetHeader className="mb-6 p-0">
+                <SheetTitle className="text-lg">{selected.nombre}</SheetTitle>
+              </SheetHeader>
 
-            <div className="flex flex-col gap-4 text-sm">
-              <div>
-                <p className="text-xs font-semibold uppercase text-text-muted">Email</p>
-                <p className="text-text-primary">{selected.email}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-text-muted">Teléfono</p>
-                <p className="text-text-primary">{selected.telefono}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-text-muted">Etapa</p>
-                <div className="mt-1">
-                  <SelectDropdown
-                    options={etapas.map((e) => e.label)}
-                    value={etapaLabel}
-                    onChange={setEtapaLabel}
-                  />
+              <div className="flex flex-col gap-4 text-sm">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-text-muted">Email</p>
+                  <p className="text-text-primary">{selected.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-text-muted">Teléfono</p>
+                  <p className="text-text-primary">{selected.telefono}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-text-muted">Etapa</p>
+                  <div className="mt-1">
+                    <SelectDropdown
+                      options={etapas.map((e) => e.label)}
+                      value={etapaLabel}
+                      onChange={setEtapaLabel}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-text-muted">Etiquetas</p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {selected.tags.map((t) => (
+                      <StatusBadge key={t} label={t} />
+                    ))}
+                    <button className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-muted">
+                      + Agregar
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Timeline de interacciones</p>
+                  <ul className="flex flex-col gap-2 text-xs text-text-secondary">
+                    <li>· Contactado por Instagram — hace 3 días</li>
+                    <li>· Nota agregada por Fabiana Q. — hace 2 días</li>
+                    <li>· Pasó a etapa &quot;{etapas.find((e) => e.key === selected.etapa)?.label}&quot; — hace 1 día</li>
+                  </ul>
+                </div>
+
+                <div className="border-t border-border pt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Nota rápida</p>
+                  <TextArea rows={3} placeholder="Escribe una nota…" aria-label="Nota rápida" />
+                  <Button className="mt-2 h-8 bg-cta text-xs text-white hover:bg-cta-hover">Guardar nota</Button>
                 </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-text-muted">Etiquetas</p>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {selected.tags.map((t) => (
-                    <StatusBadge key={t} label={t} />
-                  ))}
-                  <button className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-muted">
-                    + Agregar
-                  </button>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4">
-                <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Timeline de interacciones</p>
-                <ul className="flex flex-col gap-2 text-xs text-text-secondary">
-                  <li>· Contactado por Instagram — hace 3 días</li>
-                  <li>· Nota agregada por Fabiana Q. — hace 2 días</li>
-                  <li>· Pasó a etapa &quot;{etapas.find((e) => e.key === selected.etapa)?.label}&quot; — hace 1 día</li>
-                </ul>
-              </div>
-
-              <div className="border-t border-border pt-4">
-                <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Nota rápida</p>
-                <TextArea rows={3} placeholder="Escribe una nota…" aria-label="Nota rápida" />
-                <Button className="mt-2 h-8 bg-cta text-xs text-white hover:bg-cta-hover">Guardar nota</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
