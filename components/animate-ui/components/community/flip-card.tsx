@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { easeOut, motion } from 'motion/react';
 import * as React from 'react';
-import { Github, Linkedin, Twitter } from 'lucide-react';
 
 export interface FlipCardData {
   name: string;
@@ -98,40 +97,6 @@ export function FlipCard({ data }: FlipCardProps) {
               <p className="text-base font-bold">{data.stats.posts}</p>
               <p className="text-xs text-muted-foreground">Posts</p>
             </div>
-          )}
-        </div>
-
-        {/* Social Media Icons */}
-        <div className="flex items-center justify-center gap-4">
-          {data.socialLinks?.linkedin && (
-            <a
-              href={data.socialLinks.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform"
-            >
-              <Linkedin size={20} />
-            </a>
-          )}
-          {data.socialLinks?.github && (
-            <a
-              href={data.socialLinks.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform"
-            >
-              <Github size={20} />
-            </a>
-          )}
-          {data.socialLinks?.twitter && (
-            <a
-              href={data.socialLinks.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform"
-            >
-              <Twitter size={20} />
-            </a>
           )}
         </div>
 
