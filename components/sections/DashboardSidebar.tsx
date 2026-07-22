@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, Bell } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { topbarModules, sidebarByModule, getActiveModuleHref } from "@/lib/nav-config";
 import { AccountMenu } from "@/components/dashboard/AccountMenu";
@@ -48,7 +48,7 @@ export function DashboardSidebar() {
   return (
     <Sidebar collapsible="icon">
       {/* Header: logo + utilidades */}
-      <SidebarHeader className="flex-row items-center justify-between border-b border-sidebar-border px-2 py-3">
+      <SidebarHeader className="h-16 flex-row items-center justify-between border-b border-sidebar-border px-4 py-0">
         <Link href="/home" className="flex items-center gap-2 overflow-hidden">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-cta text-white font-bold">
             •
@@ -57,9 +57,6 @@ export function DashboardSidebar() {
             Codew SaaS
           </span>
         </Link>
-        <button className="shrink-0 text-sidebar-foreground/70 hover:text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-          <Bell size={16} />
-        </button>
       </SidebarHeader>
 
       {/* Árbol de navegación agrupado: General / Proyectos / Gestión */}
