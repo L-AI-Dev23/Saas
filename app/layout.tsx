@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 import { AriaRouterProvider } from "@/components/providers/AriaRouterProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 // Nota: la fuente "Onest" (extraída del styleguide) se carga vía @font-face
@@ -29,9 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={cn(GeistMono.variable)}>
+    <html lang="es" className={cn(GeistMono.variable)} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
-        <AriaRouterProvider>{children}</AriaRouterProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <AriaRouterProvider>{children}</AriaRouterProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

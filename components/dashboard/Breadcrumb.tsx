@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { topbarModules, sidebarByModule, getActiveModuleHref } from "@/lib/nav-config";
+import { TopbarActions } from "@/components/dashboard/TopbarActions";
 
 export function Breadcrumb() {
   const pathname = usePathname();
@@ -14,7 +15,7 @@ export function Breadcrumb() {
   const showSubItem = subItem && subItem.href !== activeModuleHref;
 
   return (
-    <div className="flex h-16 shrink-0 items-center border-b border-border px-6">
+    <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6">
       <div className="flex items-center gap-1.5 text-sm text-text-secondary">
         <span className={showSubItem ? "" : "font-medium text-text-primary"}>
           {activeModule?.label}
@@ -26,6 +27,7 @@ export function Breadcrumb() {
           </>
         )}
       </div>
+      <TopbarActions />
     </div>
   );
 }
