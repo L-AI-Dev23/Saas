@@ -226,18 +226,20 @@ export const chatbotCampanas = [
 
 // ---------- CRM ----------
 export const crmKpis = [
-  { label: "Leads nuevos (semana)", value: "42" },
-  { label: "Pasaron a Cliente (mes)", value: "17" },
-  { label: "Tasa de conversión", value: "14.2%" },
+  { label: "Leads nuevos (semana)", value: "42", href: "/home/crm/contactos" },
+  { label: "Pasaron a Cliente (mes)", value: "17", href: "/home/crm/contactos" },
+  { label: "Tasa de conversión", value: "14.2%", href: "#leads-chart" },
 ];
 
+// Nota: "tiempo" es solo para la vista de actividad reciente del dashboard;
+// con datos reales vendría de la fecha de última interacción del contacto.
 export const contactos = [
-  { id: 1, nombre: "María Fernández", email: "maria.fernandez@gmail.com", telefono: "+51 987 654 321", origen: "chatbot", etapa: "cliente", tags: ["curso-excel", "vip"] },
-  { id: 2, nombre: "Luis Ramírez", email: "luis.ramirez@gmail.com", telefono: "+51 954 112 233", origen: "chatbot", etapa: "en_conversacion", tags: ["interesado-curso"] },
-  { id: 3, nombre: "Andrea Solís", email: "andrea.solis@hotmail.com", telefono: "+51 944 221 987", origen: "email", etapa: "nuevo", tags: [] },
-  { id: 4, nombre: "Jorge Paredes", email: "jorge.paredes@gmail.com", telefono: "+51 933 445 112", origen: "manual", etapa: "en_conversacion", tags: ["arequipa"] },
-  { id: 5, nombre: "Camila Torres", email: "camila.torres@gmail.com", telefono: "+51 922 887 665", origen: "catalogo", etapa: "cliente", tags: ["curso-excel"] },
-  { id: 6, nombre: "Grupo Textil Rivas", email: "contacto@textilrivas.com", telefono: "+51 911 223 344", origen: "chatbot", etapa: "inactivo", tags: ["b2b"] },
+  { id: 1, nombre: "María Fernández", email: "maria.fernandez@gmail.com", telefono: "+51 987 654 321", origen: "chatbot", etapa: "cliente", tags: ["curso-excel", "vip"], tiempo: "hace 25 min" },
+  { id: 2, nombre: "Luis Ramírez", email: "luis.ramirez@gmail.com", telefono: "+51 954 112 233", origen: "chatbot", etapa: "en_conversacion", tags: ["interesado-curso"], tiempo: "hace 6 min" },
+  { id: 3, nombre: "Andrea Solís", email: "andrea.solis@hotmail.com", telefono: "+51 944 221 987", origen: "email", etapa: "nuevo", tags: [], tiempo: "hace 1 h" },
+  { id: 4, nombre: "Jorge Paredes", email: "jorge.paredes@gmail.com", telefono: "+51 933 445 112", origen: "manual", etapa: "en_conversacion", tags: ["arequipa"], tiempo: "hace 3 h" },
+  { id: 5, nombre: "Camila Torres", email: "camila.torres@gmail.com", telefono: "+51 922 887 665", origen: "catalogo", etapa: "cliente", tags: ["curso-excel"], tiempo: "hace 5 h" },
+  { id: 6, nombre: "Grupo Textil Rivas", email: "contacto@textilrivas.com", telefono: "+51 911 223 344", origen: "chatbot", etapa: "inactivo", tags: ["b2b"], tiempo: "hace 1 día" },
 ];
 
 export const crmTags = [
