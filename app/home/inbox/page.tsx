@@ -27,16 +27,30 @@ const estadoLabel: Record<string, string> = {
   cerrado: "Cerrado",
 };
 
+const FILTROS = [
+  { label: "Todos", estados: null },
+  { label: "Esperando humano", estados: ["esperando_humano"] },
+  { label: "Bot activo", estados: ["bot_activo"] },
+  { label: "Cerrados", estados: ["cerrado"] },
+] as const;
+
 export default function InboxPage() {
-  const [selectedId, setSelectedId] = useState(conversaciones[0].id);
+  // Copia local editable: partimos del mock y mutamos el estado de una
+  // conversación (ej. al "tomarla"). Sin backend esto vive solo en memoria.
+  const [convos, setConvos] = useState(conversaciones);
+  const [selectedId, setSelectedId] = useState(convos[0].id);
+  const [filtroActivo, setFiltroActivo] = useState<(typeof FILTROS)[number]["label"]>("Todos");
   const [borrador, setBorrador] = useState("");
-  // Mensajes editables en memoria: partimos del mock y agregamos lo que el
-  // usuario envía. Esto es solo local -- sin backend, se pierde al refrescar.
   const [mensajesPorConv, setMensajesPorConv] = useState(mensajesPorConversacion);
 
-  const activa = conversaciones.find((c) => c.id === selectedId) ?? conversaciones[0];
+  const activa = convos.find((c) => c.id === selectedId) ?? convos[0];
   const mensajes = mensajesPorConv[activa.id] ?? [];
   const CanalActivo = canalIcon[activa.canal];
+
+  const filtro = FILTROS.find((f) => f.label === filtroActivo)!;
+  const convosFiltrados = filtro.estados
+    ? convos.filter((c) => (filtro.estados as readonly string[]).includes(c.estado))
+    : convos;
 
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -57,6 +71,24 @@ export default function InboxPage() {
     setBorrador("");
   }
 
+  function tomarConversacion() {
+    setConvos((prev) =>
+      prev.map((c) => (c.id === activa.id ? { ...c, estado: "atendido_humano" } : c))
+    );
+  }
+
+  // Notas por contacto, en memoria. El borrador se guarda al tipear;
+  // "Guardar" solo confirma visualmente (acá no hay backend todavía).
+  const [notas, setNotas] = useState<Record<number, string>>({});
+  const [notaGuardadaId, setNotaGuardadaId] = useState<number | null>(null);
+  const notaGuardadaTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function guardarNota() {
+    setNotaGuardadaId(activa.id);
+    if (notaGuardadaTimeout.current) clearTimeout(notaGuardadaTimeout.current);
+    notaGuardadaTimeout.current = setTimeout(() => setNotaGuardadaId(null), 2000);
+  }
+
   return (
     <div className="-m-6 flex h-[calc(100vh-4rem)] overflow-hidden lg:-m-8">
       {/* Lista de conversaciones */}
@@ -64,21 +96,29 @@ export default function InboxPage() {
         <div className="border-b border-border p-4">
           <h1 className="text-lg font-semibold text-text-primary">Chats</h1>
           <div className="mt-3 flex flex-wrap gap-2">
-            {["Todos", "Esperando humano", "Bot activo", "Cerrados"].map((f, i) => (
+            {FILTROS.map((f) => (
               <button
-                key={f}
+                key={f.label}
+                onClick={() => setFiltroActivo(f.label)}
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-semibold",
-                  i === 0 ? "bg-dashboard-active text-dashboard-topbar" : "bg-surface text-text-secondary"
+                  "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                  filtroActivo === f.label
+                    ? "bg-dashboard-active text-dashboard-topbar"
+                    : "bg-surface text-text-secondary hover:bg-border"
                 )}
               >
-                {f}
+                {f.label}
               </button>
             ))}
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {conversaciones.map((c) => {
+          {convosFiltrados.length === 0 ? (
+            <p className="p-4 text-center text-sm text-text-muted">
+              No hay conversaciones en “{filtroActivo}”.
+            </p>
+          ) : (
+            convosFiltrados.map((c) => {
             const Canal = canalIcon[c.canal];
             const esActiva = c.id === activa.id;
             return (
@@ -114,7 +154,8 @@ export default function InboxPage() {
                 </div>
               </button>
             );
-          })}
+            })
+          )}
         </div>
       </div>
 
@@ -127,9 +168,18 @@ export default function InboxPage() {
               {CanalActivo.label} · {estadoLabel[activa.estado]}
             </p>
           </div>
-          <button className="rounded-lg bg-cta px-4 py-2 text-sm font-semibold text-white hover:bg-cta-hover">
-            Tomar conversación
-          </button>
+          {activa.estado === "esperando_humano" ? (
+            <button
+              onClick={tomarConversacion}
+              className="rounded-lg bg-cta px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cta-hover"
+            >
+              Tomar conversación
+            </button>
+          ) : (
+            <span className="text-xs font-medium text-text-muted">
+              {estadoLabel[activa.estado]}
+            </span>
+          )}
         </div>
 
         <div className="flex-1 space-y-3 overflow-y-auto p-6">
@@ -170,7 +220,7 @@ export default function InboxPage() {
           <button
             type="submit"
             disabled={!borrador.trim()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cta text-white hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cta text-white transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Send size={16} />
           </button>
@@ -200,8 +250,27 @@ export default function InboxPage() {
         </div>
 
         <div className="mt-4 flex-1">
-          <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Nota rápida</p>
-          <TextArea rows={3} placeholder="Agregar una nota…" size="sm" aria-label="Nota rápida" />
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-text-muted">Nota rápida</p>
+            {notaGuardadaId === activa.id && (
+              <span className="text-[11px] font-medium text-success">Guardada</span>
+            )}
+          </div>
+          <TextArea
+            rows={3}
+            placeholder="Agregar una nota…"
+            size="sm"
+            aria-label="Nota rápida"
+            value={notas[activa.id] ?? ""}
+            onChange={(v) => setNotas((prev) => ({ ...prev, [activa.id]: v }))}
+          />
+          <button
+            onClick={guardarNota}
+            disabled={!notas[activa.id]?.trim()}
+            className="mt-2 w-full rounded-lg border border-border py-1.5 text-xs font-semibold text-text-primary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Guardar nota
+          </button>
         </div>
 
         <a
