@@ -1,0 +1,445 @@
+diff --git a/app/home/automatizaciones/activas/page.tsx b/app/home/automatizaciones/activas/page.tsx
+index 492dae0..5c3a125 100644
+--- a/app/home/automatizaciones/activas/page.tsx
++++ b/app/home/automatizaciones/activas/page.tsx
+@@ -1,27 +1,14 @@
+ "use client";
+ 
+-import { useState } from "react";
+ import { Plus } from "lucide-react";
+ import { Button } from "@/components/animate-ui/components/buttons/button";
+-import { Input } from "@/components/ui/input";
+-import { Label } from "@/components/ui/label";
+-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
+-import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
+ import { Toggle } from "@/components/base/toggle/toggle";
+-import { automatizacionesActivas } from "@/lib/mock-data";
+-
+-const eventos = ["Carrito abandonado", "Contacto nuevo", "Compra realizada", "Etiqueta agregada", "Formulario enviado"];
+-const acciones = ["Enviar email", "Agregar etiqueta", "Esperar X días", "Crear notificación"];
++import { AutomationConfigModal } from "@/components/dashboard/AutomationConfigModal";
++import { useAutomationRules, addAutomationRule, toggleAutomationRule } from "@/lib/automations-store";
+ 
+ export default function AutomatizacionesActivasPage() {
+-  const [evento, setEvento] = useState(eventos[0]);
+-  const [accion, setAccion] = useState(acciones[0]);
+-  const [reglas, setReglas] = useState(automatizacionesActivas);
+-
+-  const toggleEstado = (id: (typeof automatizacionesActivas)[number]["id"]) => {
+-    setReglas((prev) => prev.map((r) => (r.id === id ? { ...r, estado: !r.estado } : r)));
+-  };
++  const reglas = useAutomationRules();
+ 
+   return (
+     <div className="mx-auto max-w-6xl">
+@@ -29,65 +16,50 @@ export default function AutomatizacionesActivasPage() {
+         title="Automatizaciones activas"
+         description="Reglas activas de disparador → acción."
+         action={
+-          <Dialog>
+-            <DialogTrigger asChild>
++          <AutomationConfigModal
++            trigger={
+               <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover">
+                 <Plus size={16} /> Nueva automatización
+               </Button>
+-            </DialogTrigger>
+-            <DialogContent>
+-              <DialogHeader>
+-                <DialogTitle>Nueva automatización</DialogTitle>
+-              </DialogHeader>
+-              <div className="flex flex-col gap-4 py-2">
+-                <div className="flex flex-col gap-1.5">
+-                  <Label>Nombre</Label>
+-                  <Input placeholder="Ej. Recordatorio de carrito" />
+-                </div>
+-                <div className="flex flex-col gap-1.5">
+-                  <Label>Evento disparador</Label>
+-                  <SelectDropdown options={eventos} value={evento} onChange={setEvento} />
+-                </div>
+-                <div className="flex flex-col gap-1.5">
+-                  <Label>Acción</Label>
+-                  <SelectDropdown options={acciones} value={accion} onChange={setAccion} />
+-                </div>
+-              </div>
+-              <DialogFooter>
+-                <DialogClose asChild>
+-                  <Button variant="outline">Cancelar</Button>
+-                </DialogClose>
+-                <Button className="bg-cta text-white hover:bg-cta-hover">Guardar y activar</Button>
+-              </DialogFooter>
+-            </DialogContent>
+-          </Dialog>
++            }
++            onSave={addAutomationRule}
++          />
+         }
+       />
+ 
+-      <div className="overflow-hidden rounded-lg border border-border bg-white">
+-        <table className="w-full text-left text-sm">
+-          <thead className="bg-surface text-xs font-semibold uppercase text-text-muted">
+-            <tr>
+-              <th className="px-5 py-3">Nombre</th>
+-              <th className="px-5 py-3">Evento disparador</th>
+-              <th className="px-5 py-3">Acción</th>
+-              <th className="px-5 py-3">Activa</th>
+-            </tr>
+-          </thead>
+-          <tbody className="divide-y divide-border">
+-            {reglas.map((a) => (
+-              <tr key={a.id} className="hover:bg-surface">
+-                <td className="px-5 py-3 font-medium text-text-primary">{a.nombre}</td>
+-                <td className="px-5 py-3 text-text-secondary">{a.evento}</td>
+-                <td className="px-5 py-3 text-text-secondary">{a.accion}</td>
+-                <td className="px-5 py-3">
+-                  <Toggle isSelected={a.estado} onChange={() => toggleEstado(a.id)} aria-label={`Activar ${a.nombre}`} />
+-                </td>
++      {reglas.length === 0 ? (
++        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
++          <p className="text-sm font-semibold text-text-primary">Todavía no tienes automatizaciones activas</p>
++          <p className="mt-1 max-w-sm text-sm text-text-secondary">
++            Crea una desde cero o parte de una plantilla en la sección Plantillas.
++          </p>
++        </div>
++      ) : (
++        <div className="overflow-hidden rounded-lg border border-border bg-white">
++          <table className="w-full text-left text-sm">
++            <thead className="bg-surface text-xs font-semibold uppercase text-text-muted">
++              <tr>
++                <th className="px-5 py-3">Nombre</th>
++                <th className="px-5 py-3">Evento disparador</th>
++                <th className="px-5 py-3">Acción</th>
++                <th className="px-5 py-3">Activa</th>
+               </tr>
+-            ))}
+-          </tbody>
+-        </table>
+-      </div>
++            </thead>
++            <tbody className="divide-y divide-border">
++              {reglas.map((a) => (
++                <tr key={a.id} className="hover:bg-surface">
++                  <td className="px-5 py-3 font-medium text-text-primary">{a.nombre}</td>
++                  <td className="px-5 py-3 text-text-secondary">{a.evento}</td>
++                  <td className="px-5 py-3 text-text-secondary">{a.accion}</td>
++                  <td className="px-5 py-3">
++                    <Toggle isSelected={a.estado} onChange={() => toggleAutomationRule(a.id)} aria-label={`Activar ${a.nombre}`} />
++                  </td>
++                </tr>
++              ))}
++            </tbody>
++          </table>
++        </div>
++      )}
+     </div>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/app/home/automatizaciones/plantillas/page.tsx b/app/home/automatizaciones/plantillas/page.tsx
+index cc58561..f9aa98a 100644
+--- a/app/home/automatizaciones/plantillas/page.tsx
++++ b/app/home/automatizaciones/plantillas/page.tsx
+@@ -1,33 +1,110 @@
+-import { Zap } from "lucide-react";
++"use client";
++
++import { useState } from "react";
++import { useRouter } from "next/navigation";
++import { Search, ShoppingCart, UserPlus, MessageCircleHeart, Tag, Zap, Check } from "lucide-react";
+ import { Button } from "@/components/animate-ui/components/buttons/button";
++import { Input } from "@/components/ui/input";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
++import { AutomationConfigModal } from "@/components/dashboard/AutomationConfigModal";
++import { addAutomationRule } from "@/lib/automations-store";
+ import { automatizacionesPlantillas } from "@/lib/mock-data";
+ 
++const icons: Record<string, typeof Zap> = {
++  carrito: ShoppingCart,
++  bienvenida: UserPlus,
++  seguimiento: MessageCircleHeart,
++  etiqueta: Tag,
++};
++
+ export default function AutomatizacionesPlantillasPage() {
++  const router = useRouter();
++  const [busqueda, setBusqueda] = useState("");
++  const [creada, setCreada] = useState<string | null>(null);
++
++  const filtradas = automatizacionesPlantillas.filter((t) =>
++    t.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())
++  );
++
++  function handleSave(r: { nombre: string; evento: string; accion: string }) {
++    addAutomationRule(r);
++    setCreada(r.nombre);
++    setTimeout(() => setCreada(null), 4000);
++  }
++
+   return (
+     <div className="mx-auto max-w-6xl">
+       <PageHeader
+         title="Plantillas de automatización"
+         description="Automatizaciones preconfiguradas, listas para implementar en pocos clics."
++        action={
++          <div className="relative sm:w-64">
++            <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
++            <Input
++              placeholder="Buscar plantilla…"
++              value={busqueda}
++              onChange={(e) => setBusqueda(e.target.value)}
++              className="pl-8"
++            />
++          </div>
++        }
+       />
+ 
+-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+-        {automatizacionesPlantillas.map((t) => (
+-          <div
+-            key={t.id}
+-            className="flex flex-col rounded-lg border border-border bg-white p-5 shadow-sg-sm transition-shadow hover:shadow-sg-md"
++      {creada && (
++        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/5 px-4 py-3 text-sm">
++          <span className="flex items-center gap-2 text-success">
++            <Check size={16} /> &quot;{creada}&quot; se creó y quedó activa.
++          </span>
++          <button
++            onClick={() => router.push("/home/automatizaciones/activas")}
++            className="font-semibold text-cta hover:underline"
+           >
+-            <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-cta/10 text-cta">
+-              <Zap size={20} />
+-            </span>
+-            <p className="text-sm font-semibold text-text-primary">{t.nombre}</p>
+-            <p className="mt-1 flex-1 text-xs text-text-secondary">{t.desc}</p>
+-            <Button className="mt-4 h-9 w-full rounded-lg bg-cta text-white hover:bg-cta-hover">
+-              Usar plantilla
+-            </Button>
+-          </div>
+-        ))}
+-      </div>
++            Ver en Activas
++          </button>
++        </div>
++      )}
++
++      {filtradas.length === 0 ? (
++        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
++          <p className="text-sm font-semibold text-text-primary">Ninguna plantilla coincide con tu búsqueda</p>
++          <p className="mt-1 max-w-sm text-sm text-text-secondary">Prueba con otro término.</p>
++        </div>
++      ) : (
++        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
++          {filtradas.map((t) => {
++            const Icon = icons[t.icono] ?? Zap;
++            return (
++              <div
++                key={t.id}
++                className="flex flex-col rounded-lg border border-border bg-white p-5 shadow-sg-sm transition-shadow hover:shadow-sg-md"
++              >
++                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-cta/10 text-cta">
++                  <Icon size={20} />
++                </span>
++                <p className="text-sm font-semibold text-text-primary">{t.nombre}</p>
++                <p className="mt-1 flex-1 text-xs text-text-secondary">{t.desc}</p>
++                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-text-secondary">
++                  <span className="rounded-full bg-surface px-2 py-0.5">{t.evento}</span>
++                  <span className="text-text-muted">→</span>
++                  <span className="rounded-full bg-surface px-2 py-0.5">{t.accion}</span>
++                </div>
++                <AutomationConfigModal
++                  title={`Usar plantilla — ${t.nombre}`}
++                  initialNombre={t.nombre}
++                  initialEvento={t.evento}
++                  initialAccion={t.accion}
++                  onSave={(r) => handleSave(r)}
++                  trigger={
++                    <Button className="mt-4 h-9 w-full rounded-lg bg-cta text-white hover:bg-cta-hover">
++                      Usar plantilla
++                    </Button>
++                  }
++                />
++              </div>
++            );
++          })}
++        </div>
++      )}
+     </div>
+   );
+ }
+diff --git a/components/dashboard/AutomationConfigModal.tsx b/components/dashboard/AutomationConfigModal.tsx
+new file mode 100644
+index 0000000..0ed2e83
+--- /dev/null
++++ b/components/dashboard/AutomationConfigModal.tsx
+@@ -0,0 +1,109 @@
++"use client";
++
++import { useState } from "react";
++import { Button } from "@/components/animate-ui/components/buttons/button";
++import { Input } from "@/components/ui/input";
++import { Label } from "@/components/ui/label";
++import {
++  Dialog,
++  DialogClose,
++  DialogContent,
++  DialogHeader,
++  DialogTitle,
++  DialogFooter,
++  DialogTrigger,
++} from "@/components/animate-ui/components/radix/dialog";
++import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
++
++export const eventosAutomatizacion = [
++  "Carrito abandonado",
++  "Contacto nuevo",
++  "Compra realizada",
++  "Etiqueta agregada",
++  "Formulario enviado",
++];
++export const accionesAutomatizacion = ["Enviar email", "Agregar etiqueta", "Esperar X días", "Crear notificación"];
++
++export interface AutomationConfigResult {
++  nombre: string;
++  evento: string;
++  accion: string;
++}
++
++export function AutomationConfigModal({
++  trigger,
++  title = "Nueva automatización",
++  initialNombre = "",
++  initialEvento = eventosAutomatizacion[0],
++  initialAccion = accionesAutomatizacion[0],
++  onSave,
++}: {
++  trigger: React.ReactNode;
++  title?: string;
++  initialNombre?: string;
++  initialEvento?: string;
++  initialAccion?: string;
++  onSave: (result: AutomationConfigResult) => void;
++}) {
++  const [open, setOpen] = useState(false);
++  const [nombre, setNombre] = useState(initialNombre);
++  const [evento, setEvento] = useState(initialEvento);
++  const [accion, setAccion] = useState(initialAccion);
++
++  function handleOpenChange(next: boolean) {
++    setOpen(next);
++    if (next) {
++      // Reinicia con los valores sugeridos de la plantilla cada vez que se abre.
++      setNombre(initialNombre);
++      setEvento(initialEvento);
++      setAccion(initialAccion);
++    }
++  }
++
++  function handleSave() {
++    if (!nombre.trim()) return;
++    onSave({ nombre: nombre.trim(), evento, accion });
++    setOpen(false);
++  }
++
++  return (
++    <Dialog open={open} onOpenChange={handleOpenChange}>
++      <DialogTrigger asChild>{trigger}</DialogTrigger>
++      <DialogContent>
++        <DialogHeader>
++          <DialogTitle>{title}</DialogTitle>
++        </DialogHeader>
++        <div className="flex flex-col gap-4 py-2">
++          <div className="flex flex-col gap-1.5">
++            <Label>Nombre</Label>
++            <Input
++              placeholder="Ej. Recordatorio de carrito"
++              value={nombre}
++              onChange={(e) => setNombre(e.target.value)}
++            />
++          </div>
++          <div className="flex flex-col gap-1.5">
++            <Label>Evento disparador</Label>
++            <SelectDropdown options={eventosAutomatizacion} value={evento} onChange={setEvento} />
++          </div>
++          <div className="flex flex-col gap-1.5">
++            <Label>Acción</Label>
++            <SelectDropdown options={accionesAutomatizacion} value={accion} onChange={setAccion} />
++          </div>
++        </div>
++        <DialogFooter>
++          <DialogClose asChild>
++            <Button variant="outline">Cancelar</Button>
++          </DialogClose>
++          <Button
++            className="bg-cta text-white hover:bg-cta-hover disabled:opacity-50"
++            disabled={!nombre.trim()}
++            onClick={handleSave}
++          >
++            Guardar y activar
++          </Button>
++        </DialogFooter>
++      </DialogContent>
++    </Dialog>
++  );
++}
+diff --git a/lib/automations-store.ts b/lib/automations-store.ts
+new file mode 100644
+index 0000000..404ca79
+--- /dev/null
++++ b/lib/automations-store.ts
+@@ -0,0 +1,35 @@
++"use client";
++
++import { useSyncExternalStore } from "react";
++import { automatizacionesActivas } from "@/lib/mock-data";
++
++export type ReglaAutomatizacion = (typeof automatizacionesActivas)[number];
++
++let reglas: ReglaAutomatizacion[] = automatizacionesActivas;
++const listeners = new Set<() => void>();
++
++function emit() {
++  listeners.forEach((l) => l());
++}
++
++export function useAutomationRules() {
++  return useSyncExternalStore(
++    (onChange) => {
++      listeners.add(onChange);
++      return () => listeners.delete(onChange);
++    },
++    () => reglas,
++    () => automatizacionesActivas
++  );
++}
++
++export function addAutomationRule(data: { nombre: string; evento: string; accion: string }) {
++  const nextId = reglas.length ? Math.max(...reglas.map((r) => r.id)) + 1 : 1;
++  reglas = [...reglas, { id: nextId, estado: true, ...data }];
++  emit();
++}
++
++export function toggleAutomationRule(id: number) {
++  reglas = reglas.map((r) => (r.id === id ? { ...r, estado: !r.estado } : r));
++  emit();
++}
+--- a/lib/mock-data.ts
++++ b/lib/mock-data.ts
+@@ -169,10 +169,10 @@
+ ];
+ 
+ export const automatizacionesPlantillas = [
+-  { id: 1, nombre: "Recordatorio de carrito abandonado", desc: "Reengancha contactos que dejaron un producto sin comprar." },
+-  { id: 2, nombre: "Bienvenida a nuevo contacto", desc: "Envía un mensaje automático cuando llega un lead nuevo." },
+-  { id: 3, nombre: "Seguimiento post-venta", desc: "Pide feedback unos días después de una compra." },
+-  { id: 4, nombre: "Etiquetado por interés", desc: "Agrega un tag automático según palabras clave del contacto." },
++  { id: 1, nombre: "Recordatorio de carrito abandonado", desc: "Reengancha contactos que dejaron un producto sin comprar.", icono: "carrito", evento: "Carrito abandonado", accion: "Enviar email" },
++  { id: 2, nombre: "Bienvenida a nuevo contacto", desc: "Envía un mensaje automático cuando llega un lead nuevo.", icono: "bienvenida", evento: "Contacto nuevo", accion: "Enviar email" },
++  { id: 3, nombre: "Seguimiento post-venta", desc: "Pide feedback unos días después de una compra.", icono: "seguimiento", evento: "Compra realizada", accion: "Esperar X días" },
++  { id: 4, nombre: "Etiquetado por interés", desc: "Agrega un tag automático según palabras clave del contacto.", icono: "etiqueta", evento: "Etiqueta agregada", accion: "Agregar etiqueta" },
+ ];
+ 
+ export const eventTypes = [

@@ -169,10 +169,10 @@ export const automatizacionesFallidas = [
 ];
 
 export const automatizacionesPlantillas = [
-  { id: 1, nombre: "Recordatorio de carrito abandonado", desc: "Reengancha contactos que dejaron un producto sin comprar." },
-  { id: 2, nombre: "Bienvenida a nuevo contacto", desc: "Envía un mensaje automático cuando llega un lead nuevo." },
-  { id: 3, nombre: "Seguimiento post-venta", desc: "Pide feedback unos días después de una compra." },
-  { id: 4, nombre: "Etiquetado por interés", desc: "Agrega un tag automático según palabras clave del contacto." },
+  { id: 1, nombre: "Recordatorio de carrito abandonado", desc: "Reengancha contactos que dejaron un producto sin comprar.", icono: "carrito", evento: "Carrito abandonado", accion: "Enviar email" },
+  { id: 2, nombre: "Bienvenida a nuevo contacto", desc: "Envía un mensaje automático cuando llega un lead nuevo.", icono: "bienvenida", evento: "Contacto nuevo", accion: "Enviar email" },
+  { id: 3, nombre: "Seguimiento post-venta", desc: "Pide feedback unos días después de una compra.", icono: "seguimiento", evento: "Compra realizada", accion: "Esperar X días" },
+  { id: 4, nombre: "Etiquetado por interés", desc: "Agrega un tag automático según palabras clave del contacto.", icono: "etiqueta", evento: "Etiqueta agregada", accion: "Agregar etiqueta" },
 ];
 
 export const eventTypes = [
