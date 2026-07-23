@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { planActual, usoPlan, planes, historialPagos } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { Button } from "@/components/animate-ui/components/buttons/button";
 import { cn } from "@/lib/utils";
 
 export default function FacturacionPage() {
@@ -15,9 +16,9 @@ export default function FacturacionPage() {
           <p className="text-xl font-semibold text-text-primary">{planActual.nombre}</p>
           <p className="text-sm text-text-secondary">{planActual.precio}</p>
         </div>
-        <a href="#planes" className="rounded-lg bg-cta px-4 py-2 text-sm font-semibold text-white hover:bg-cta-hover">
-          Cambiar de plan
-        </a>
+        <Button asChild className="rounded-lg bg-cta text-white hover:bg-cta-hover">
+          <a href="#planes">Cambiar de plan</a>
+        </Button>
       </div>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2">
@@ -72,7 +73,7 @@ export default function FacturacionPage() {
                   <Check size={14} className="text-cta" /> {p.cuentas} cuentas conectadas
                 </li>
               </ul>
-              <button
+              <Button
                 disabled={p.actual}
                 className={cn(
                   "mt-5 h-9 rounded-lg text-sm font-semibold",
@@ -80,7 +81,7 @@ export default function FacturacionPage() {
                 )}
               >
                 {p.actual ? "Plan actual" : "Cambiar a este plan"}
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -107,7 +108,9 @@ export default function FacturacionPage() {
                     <StatusBadge label={p.estado} />
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <button className="text-xs font-semibold text-cta hover:underline">Ver comprobante</button>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs font-semibold text-cta">
+                      Ver comprobante
+                    </Button>
                   </td>
                 </tr>
               ))}
