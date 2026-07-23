@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC, type RefAttributes, useCallback } from "react";
+import { type FC, type RefAttributes, useCallback, useContext } from "react";
 import { Check, ChevronRight, DotsVertical } from "@untitledui/icons";
 import type {
     ButtonProps as AriaButtonProps,
@@ -21,6 +21,7 @@ import {
     Separator as AriaSeparator,
 } from "react-aria-components";
 import { cx } from "@/lib/utils/cx";
+import { DialogPortalTargetContext } from "@/components/animate-ui/components/radix/dialog";
 import { Avatar } from "../avatar/avatar";
 import { CheckboxBase } from "../checkbox/checkbox";
 import { RadioButtonBase } from "../radio-buttons/radio-buttons";
@@ -139,9 +140,11 @@ const DropdownMenu = <T extends object>(props: DropdownMenuProps<T>) => {
 interface DropdownPopoverProps extends AriaPopoverProps {}
 
 const DropdownPopover = (props: DropdownPopoverProps) => {
+    const dialogPortalTarget = useContext(DialogPortalTargetContext);
     return (
         <AriaPopover
             placement="bottom right"
+            UNSTABLE_portalContainer={dialogPortalTarget ?? undefined}
             {...props}
             className={(state) =>
                 cx(

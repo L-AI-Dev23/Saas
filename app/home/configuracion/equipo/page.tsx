@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
@@ -62,7 +62,9 @@ export default function EquipoPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline">Cancelar</Button>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </DialogClose>
                 <Button className="bg-cta text-white hover:bg-cta-hover">Enviar invitación</Button>
               </DialogFooter>
             </DialogContent>

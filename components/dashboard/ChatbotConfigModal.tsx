@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -181,7 +182,9 @@ export function ChatbotConfigModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline">Cancelar</Button>
+          <DialogClose asChild>
+            <Button variant="outline">Cancelar</Button>
+          </DialogClose>
           <Button className="bg-cta text-white hover:bg-cta-hover">Guardar y activar</Button>
         </DialogFooter>
       </DialogContent>

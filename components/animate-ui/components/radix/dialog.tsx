@@ -53,6 +53,14 @@ function DialogOverlay({ className, ...props }: DialogOverlayProps) {
   );
 }
 
+// Contenedor DOM real del contenido del Dialog. Se expone para que overlays de
+// otras librerías (como los Popover de react-aria-components usados en
+// Dropdown/Select) puedan "portalizarse" como descendientes de este nodo en
+// vez de como hermanos sueltos del <body>. Si no lo hacen, Radix Dialog trata
+// esos overlays como "afuera" del modal (por su focus-trap y su lógica de
+// clic-fuera-para-cerrar) y bloquea el hover/click dentro de ellos.
+const DialogPortalTargetContext = React.createContext<HTMLElement | null>(null);
+
 type DialogContentProps = DialogContentPrimitiveProps & {
   showCloseButton?: boolean;
 };
@@ -63,6 +71,10 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }: DialogContentProps) {
+  const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(
+    null,
+  );
+
   return (
     <DialogPortalPrimitive>
       <DialogOverlay />
@@ -73,7 +85,11 @@ function DialogContent({
         )}
         {...props}
       >
-        {children}
+        <div ref={setPortalTarget} className="contents">
+          <DialogPortalTargetContext.Provider value={portalTarget}>
+            {children}
+          </DialogPortalTargetContext.Provider>
+        </div>
         {showCloseButton && (
           <DialogClosePrimitive className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
             <XIcon />
@@ -141,6 +157,7 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
+  DialogPortalTargetContext,
   type DialogProps,
   type DialogTriggerProps,
   type DialogCloseProps,

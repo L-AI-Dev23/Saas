@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
 import { Toggle } from "@/components/base/toggle/toggle";
@@ -54,7 +54,9 @@ export default function AutomatizacionesActivasPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline">Cancelar</Button>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </DialogClose>
                 <Button className="bg-cta text-white hover:bg-cta-hover">Guardar y activar</Button>
               </DialogFooter>
             </DialogContent>
