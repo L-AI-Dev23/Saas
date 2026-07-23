@@ -100,7 +100,7 @@ export default function HomePage() {
       {isLoading ? <KpiRowSkeleton /> : <KpiRow items={kpisDashboard} />}
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        <div className="rounded-lg border border-border bg-white p-6 shadow-sg-sm lg:col-span-2">
+        <div className="flex h-[340px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">Contactos nuevos</h2>
             <div className="flex gap-1 rounded-md bg-background p-1">
@@ -121,20 +121,22 @@ export default function HomePage() {
             </div>
           </div>
           {isLoading ? (
-            <div className="h-56 w-full animate-pulse rounded-md bg-background" />
+            <div className="w-full flex-1 animate-pulse rounded-md bg-background" />
           ) : (
-            <ContactsChart data={datosChart} />
+            <div className="min-h-0 flex-1">
+              <ContactsChart data={datosChart} />
+            </div>
           )}
         </div>
 
-        <div className="rounded-lg border border-border bg-white p-6 shadow-sg-sm">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="flex h-[340px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm">
+          <div className="mb-2 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">Actividad reciente</h2>
           </div>
           {isLoading ? (
-            <div className="flex flex-col gap-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex flex-col gap-1.5 border-l-2 border-border pl-3">
+            <div className="flex flex-col gap-4 overflow-hidden">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1.5 border-l-2 border-border py-2 pl-3">
                   <div className="h-3 w-16 animate-pulse rounded bg-border" />
                   <div className="h-3.5 w-full animate-pulse rounded bg-border" />
                   <div className="h-2.5 w-10 animate-pulse rounded bg-border" />
@@ -146,12 +148,12 @@ export default function HomePage() {
               Sin actividad reciente todavía.
             </p>
           ) : (
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-1 flex-col gap-3 overflow-y-auto pr-1">
               {actividadReciente.map((item, i) => (
                 <li key={i}>
                   <Link
                     href={item.href}
-                    className="flex flex-col gap-0.5 rounded-md border-l-2 border-border py-1.5 pl-3 pr-2 transition-colors hover:border-cta hover:bg-background"
+                    className="flex flex-col gap-1 rounded-md border-l-2 border-border py-2 pl-3 pr-2 transition-colors hover:border-cta hover:bg-background"
                   >
                     <span className="text-xs font-semibold text-cta">{item.modulo}</span>
                     <span className="text-sm text-text-primary">{item.texto}</span>

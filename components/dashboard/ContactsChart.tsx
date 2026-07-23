@@ -37,7 +37,7 @@ function ChartTooltip({
 
 export function ContactsChart({ data }: { data: ContactPoint[] }) {
   return (
-    <div className="h-56 w-full" role="img" aria-label={`Gráfico de contactos nuevos por día, del ${data[0]?.fechaCorta} al ${data[data.length - 1]?.fechaCorta}`}>
+    <div className="h-full w-full" role="img" aria-label={`Gráfico de contactos nuevos por día, del ${data[0]?.fechaCorta} al ${data[data.length - 1]?.fechaCorta}`}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <defs>
