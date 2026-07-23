@@ -25,22 +25,39 @@ const origenes = [
   "TikTok — no conectada, ir a Configuración → Cuentas",
 ];
 
+export interface ChatbotConfigInitialData {
+  origen?: string;
+  alcance?: "general" | "especifico";
+  keywords?: string[];
+  selectedProducts?: number[];
+}
+
 export function ChatbotConfigModal({
   templateId,
   templateName,
   trigger,
+  mode = "create",
+  open,
+  onOpenChange,
+  initialData,
+  onSave,
 }: {
   templateId: string;
   templateName: string;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  mode?: "create" | "edit";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  initialData?: ChatbotConfigInitialData;
+  onSave?: () => void;
 }) {
   const [keywords, setKeywords] = useState<string[]>(
-    templateId === "keyword_reply" ? ["precio", "info"] : []
+    initialData?.keywords ?? (templateId === "keyword_reply" ? ["precio", "info"] : [])
   );
   const [keywordInput, setKeywordInput] = useState("");
-  const [alcance, setAlcance] = useState<"general" | "especifico">("general");
-  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
-  const [origen, setOrigen] = useState(origenes[0]);
+  const [alcance, setAlcance] = useState<"general" | "especifico">(initialData?.alcance ?? "general");
+  const [selectedProducts, setSelectedProducts] = useState<number[]>(initialData?.selectedProducts ?? []);
+  const [origen, setOrigen] = useState(initialData?.origen ?? origenes[0]);
 
   const showKeywords = templateId === "keyword_reply" || templateId === "comment_to_dm";
   const showCommentReply = templateId === "comment_to_dm";
@@ -53,12 +70,21 @@ export function ChatbotConfigModal({
     }
   }
 
+  function handleSave() {
+    onSave?.();
+    onOpenChange?.(false);
+  }
+
+  const dialogProps = trigger ? {} : { open, onOpenChange };
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <Dialog {...dialogProps}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Configurar chatbot — {templateName}</DialogTitle>
+          <DialogTitle>
+            {mode === "edit" ? "Editar chatbot" : "Configurar chatbot"} — {templateName}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-6 py-2">
@@ -185,7 +211,9 @@ export function ChatbotConfigModal({
           <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
           </DialogClose>
-          <Button className="bg-cta text-white hover:bg-cta-hover">Guardar y activar</Button>
+          <Button className="bg-cta text-white hover:bg-cta-hover" onClick={handleSave}>
+            {mode === "edit" ? "Guardar cambios" : "Guardar y activar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

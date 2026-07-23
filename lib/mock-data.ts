@@ -227,12 +227,12 @@ export const chatbotTemplates = [
 ];
 
 export const chatbotsActivos = [
-  { id: 1, nombre: "Bienvenida IG", tipo: "Bienvenida", red: "Instagram", estado: "Activo", mensajes: 3120 },
-  { id: 2, nombre: "Promo comentarios reel", tipo: "Comentario → DM", red: "Instagram", estado: "Activo", mensajes: 4890 },
-  { id: 3, nombre: "FAQ palabra clave", tipo: "Palabra clave", red: "Messenger", estado: "Activo", mensajes: 2210 },
-  { id: 4, nombre: "Catálogo TikTok Shop", tipo: "Flujo con catálogo", red: "TikTok", estado: "Necesita atención", mensajes: 640 },
-  { id: 5, nombre: "Captura leads curso", tipo: "Captura de datos", red: "Instagram", estado: "Activo", mensajes: 1620 },
-  { id: 6, nombre: "Bienvenida Messenger", tipo: "Bienvenida", red: "Messenger", estado: "Activo", mensajes: 900 },
+  { id: 1, nombre: "Bienvenida IG", tipo: "Bienvenida", templateId: "welcome", red: "Instagram", estado: "Activo", activo: true, mensajes: 3120 },
+  { id: 2, nombre: "Promo comentarios reel", tipo: "Comentario → DM", templateId: "comment_to_dm", red: "Instagram", estado: "Activo", activo: true, mensajes: 4890 },
+  { id: 3, nombre: "FAQ palabra clave", tipo: "Palabra clave", templateId: "keyword_reply", red: "Messenger", estado: "Activo", activo: true, mensajes: 2210 },
+  { id: 4, nombre: "Catálogo TikTok Shop", tipo: "Flujo con catálogo", templateId: "catalog_flow", red: "TikTok", estado: "Necesita atención", activo: true, mensajes: 640 },
+  { id: 5, nombre: "Captura leads curso", tipo: "Captura de datos", templateId: "data_capture", red: "Instagram", estado: "Activo", activo: true, mensajes: 1620 },
+  { id: 6, nombre: "Bienvenida Messenger", tipo: "Bienvenida", templateId: "welcome", red: "Messenger", estado: "Activo", activo: true, mensajes: 900 },
 ];
 
 export const chatbotCampanas = [
