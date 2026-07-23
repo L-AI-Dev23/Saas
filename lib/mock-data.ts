@@ -219,11 +219,11 @@ export const chatbotsMensajesPorDia = mensajesPorDiaValores.map((valor, i) => {
 });
 
 export const chatbotTemplates = [
-  { id: "comment_to_dm", nombre: "Comentario → DM", desc: "Responde por DM a quien comente en tu post." },
-  { id: "keyword_reply", nombre: "Palabra clave", desc: "Responde automáticamente según palabras clave en DM." },
-  { id: "welcome", nombre: "Bienvenida", desc: "Saluda a todo nuevo seguidor o contacto." },
-  { id: "catalog_flow", nombre: "Flujo con catálogo", desc: "Muestra productos del catálogo dentro del chat." },
-  { id: "data_capture", nombre: "Captura de datos", desc: "Recolecta datos del contacto y los manda al CRM." },
+  { id: "comment_to_dm", nombre: "Comentario → DM", desc: "Responde por DM a quien comente en tu post.", redes: ["Instagram"] },
+  { id: "keyword_reply", nombre: "Palabra clave", desc: "Responde automáticamente según palabras clave en DM.", redes: ["Instagram", "Messenger"] },
+  { id: "welcome", nombre: "Bienvenida", desc: "Saluda a todo nuevo seguidor o contacto.", redes: ["Instagram", "Messenger"] },
+  { id: "catalog_flow", nombre: "Flujo con catálogo", desc: "Muestra productos del catálogo dentro del chat.", redes: ["Instagram", "TikTok"] },
+  { id: "data_capture", nombre: "Captura de datos", desc: "Recolecta datos del contacto y los manda al CRM.", redes: ["Instagram", "Messenger", "TikTok"] },
 ];
 
 export const chatbotsActivos = [
