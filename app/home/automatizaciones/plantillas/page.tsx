@@ -26,7 +26,7 @@ export default function AutomatizacionesPlantillasPage() {
     t.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())
   );
 
-  function handleSave(r: { nombre: string; evento: string; accion: string }) {
+  function handleSave(r: { nombre: string; evento: string; pasos: string[] }) {
     addAutomationRule(r);
     setCreada(r.nombre);
     setTimeout(() => setCreada(null), 4000);
@@ -92,7 +92,7 @@ export default function AutomatizacionesPlantillasPage() {
                   title={`Usar plantilla — ${t.nombre}`}
                   initialNombre={t.nombre}
                   initialEvento={t.evento}
-                  initialAccion={t.accion}
+                  initialPasos={[t.accion]}
                   onSave={(r) => handleSave(r)}
                   trigger={
                     <Button className="mt-4 h-9 w-full rounded-lg bg-cta text-white hover:bg-cta-hover">

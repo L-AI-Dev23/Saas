@@ -1,0 +1,523 @@
+From 40e2802ecb5de4988d9102d62378656e2e2b1960 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Thu, 23 Jul 2026 11:50:42 +0000
+Subject: [PATCH] feat(automatizaciones): paridad con Chatbots -> Activos
+
+- Modal soporta pasos de accion multiples (lista editable Paso 1 -> Paso 2)
+  en vez de un solo select, para poder reproducir las reglas ya existentes.
+- Click en fila abre el modal en modo edicion (AutomationConfigModal
+  controlado via open/onOpenChange).
+- Menu de acciones por fila: Editar, Pausar/Reanudar, Duplicar, Eliminar.
+- Buscador por nombre + filtros por evento disparador y estado (Activas/Pausadas).
+- automations-store gana updateAutomationRule, duplicateAutomationRule y
+  deleteAutomationRule; mock-data pasa de accion:string a pasos:string[].
+---
+ app/home/automatizaciones/activas/page.tsx    | 122 +++++++++++++-
+ app/home/automatizaciones/plantillas/page.tsx |   4 +-
+ .../dashboard/AutomationConfigModal.tsx       | 153 +++++++++++++++---
+ lib/automations-store.ts                      |  29 +++-
+ lib/mock-data.ts                              |  18 +--
+ 5 files changed, 288 insertions(+), 38 deletions(-)
+
+diff --git a/app/home/automatizaciones/activas/page.tsx b/app/home/automatizaciones/activas/page.tsx
+index 5c3a125..88ede51 100644
+--- a/app/home/automatizaciones/activas/page.tsx
++++ b/app/home/automatizaciones/activas/page.tsx
+@@ -1,14 +1,49 @@
+ "use client";
+ 
+-import { Plus } from "lucide-react";
++import { useMemo, useState } from "react";
++import { Plus, Search, MoreHorizontal, Pencil, Copy, Trash2, Pause, Play, Zap } from "lucide-react";
+ import { Button } from "@/components/animate-ui/components/buttons/button";
++import { Input } from "@/components/ui/input";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
+ import { Toggle } from "@/components/base/toggle/toggle";
+-import { AutomationConfigModal } from "@/components/dashboard/AutomationConfigModal";
+-import { useAutomationRules, addAutomationRule, toggleAutomationRule } from "@/lib/automations-store";
++import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
++import { AutomationConfigModal, eventosAutomatizacion } from "@/components/dashboard/AutomationConfigModal";
++import {
++  DropdownMenu,
++  DropdownMenuTrigger,
++  DropdownMenuContent,
++  DropdownMenuItem,
++  DropdownMenuSeparator,
++} from "@/components/animate-ui/components/radix/dropdown-menu";
++import {
++  useAutomationRules,
++  addAutomationRule,
++  updateAutomationRule,
++  duplicateAutomationRule,
++  deleteAutomationRule,
++  toggleAutomationRule,
++  type ReglaAutomatizacion,
++} from "@/lib/automations-store";
++
++const eventosFiltro = ["Todos los eventos", ...eventosAutomatizacion];
++const estados = ["Todos los estados", "Activas", "Pausadas"];
+ 
+ export default function AutomatizacionesActivasPage() {
+   const reglas = useAutomationRules();
++  const [busqueda, setBusqueda] = useState("");
++  const [filtroEvento, setFiltroEvento] = useState(eventosFiltro[0]);
++  const [filtroEstado, setFiltroEstado] = useState(estados[0]);
++  const [editando, setEditando] = useState<ReglaAutomatizacion | null>(null);
++
++  const filtradas = useMemo(() => {
++    return reglas.filter((r) => {
++      const coincideBusqueda = r.nombre.toLowerCase().includes(busqueda.trim().toLowerCase());
++      const coincideEvento = filtroEvento === eventosFiltro[0] || r.evento === filtroEvento;
++      const coincideEstado =
++        filtroEstado === estados[0] || (filtroEstado === "Activas" ? r.estado : !r.estado);
++      return coincideBusqueda && coincideEvento && coincideEstado;
++    });
++  }, [reglas, busqueda, filtroEvento, filtroEstado]);
+ 
+   return (
+     <div className="mx-auto max-w-6xl">
+@@ -27,6 +62,24 @@ export default function AutomatizacionesActivasPage() {
+         }
+       />
+ 
++      {reglas.length > 0 && (
++        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
++          <div className="relative flex-1 sm:max-w-xs">
++            <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
++            <Input
++              placeholder="Buscar automatización…"
++              value={busqueda}
++              onChange={(e) => setBusqueda(e.target.value)}
++              className="pl-8"
++            />
++          </div>
++          <div className="flex gap-2">
++            <SelectDropdown options={eventosFiltro} value={filtroEvento} onChange={setFiltroEvento} className="w-52" />
++            <SelectDropdown options={estados} value={filtroEstado} onChange={setFiltroEstado} className="w-44" />
++          </div>
++        </div>
++      )}
++
+       {reglas.length === 0 ? (
+         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
+           <p className="text-sm font-semibold text-text-primary">Todavía no tienes automatizaciones activas</p>
+@@ -34,6 +87,16 @@ export default function AutomatizacionesActivasPage() {
+             Crea una desde cero o parte de una plantilla en la sección Plantillas.
+           </p>
+         </div>
++      ) : filtradas.length === 0 ? (
++        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
++          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-text-muted">
++            <Zap size={22} />
++          </span>
++          <p className="text-sm font-semibold text-text-primary">Ninguna automatización coincide con tu búsqueda</p>
++          <p className="mt-1 max-w-sm text-sm text-text-secondary">
++            Prueba con otro término o ajusta los filtros de evento y estado.
++          </p>
++        </div>
+       ) : (
+         <div className="overflow-hidden rounded-lg border border-border bg-white">
+           <table className="w-full text-left text-sm">
+@@ -43,23 +106,68 @@ export default function AutomatizacionesActivasPage() {
+                 <th className="px-5 py-3">Evento disparador</th>
+                 <th className="px-5 py-3">Acción</th>
+                 <th className="px-5 py-3">Activa</th>
++                <th className="px-5 py-3" />
+               </tr>
+             </thead>
+             <tbody className="divide-y divide-border">
+-              {reglas.map((a) => (
+-                <tr key={a.id} className="hover:bg-surface">
++              {filtradas.map((a) => (
++                <tr key={a.id} onClick={() => setEditando(a)} className="cursor-pointer hover:bg-surface">
+                   <td className="px-5 py-3 font-medium text-text-primary">{a.nombre}</td>
+                   <td className="px-5 py-3 text-text-secondary">{a.evento}</td>
+-                  <td className="px-5 py-3 text-text-secondary">{a.accion}</td>
+-                  <td className="px-5 py-3">
++                  <td className="px-5 py-3 text-text-secondary">{a.pasos.join(" + ")}</td>
++                  <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
+                     <Toggle isSelected={a.estado} onChange={() => toggleAutomationRule(a.id)} aria-label={`Activar ${a.nombre}`} />
+                   </td>
++                  <td className="px-5 py-3 text-right" onClick={(e) => e.stopPropagation()}>
++                    <DropdownMenu>
++                      <DropdownMenuTrigger asChild>
++                        <button
++                          className="rounded-md p-1.5 text-text-muted hover:bg-surface hover:text-text-primary"
++                          aria-label={`Más acciones para ${a.nombre}`}
++                        >
++                          <MoreHorizontal size={16} />
++                        </button>
++                      </DropdownMenuTrigger>
++                      <DropdownMenuContent align="end" className="min-w-44">
++                        <DropdownMenuItem className="cursor-pointer" onSelect={() => setEditando(a)}>
++                          <Pencil size={14} /> Editar
++                        </DropdownMenuItem>
++                        <DropdownMenuItem className="cursor-pointer" onSelect={() => toggleAutomationRule(a.id)}>
++                          {a.estado ? <Pause size={14} /> : <Play size={14} />}
++                          {a.estado ? "Pausar" : "Reanudar"}
++                        </DropdownMenuItem>
++                        <DropdownMenuItem className="cursor-pointer" onSelect={() => duplicateAutomationRule(a.id)}>
++                          <Copy size={14} /> Duplicar
++                        </DropdownMenuItem>
++                        <DropdownMenuSeparator />
++                        <DropdownMenuItem
++                          variant="destructive"
++                          className="cursor-pointer"
++                          onSelect={() => deleteAutomationRule(a.id)}
++                        >
++                          <Trash2 size={14} /> Eliminar
++                        </DropdownMenuItem>
++                      </DropdownMenuContent>
++                    </DropdownMenu>
++                  </td>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         </div>
+       )}
++
++      {editando && (
++        <AutomationConfigModal
++          title={`Editar automatización — ${editando.nombre}`}
++          open={!!editando}
++          onOpenChange={(open) => !open && setEditando(null)}
++          initialNombre={editando.nombre}
++          initialEvento={editando.evento}
++          initialPasos={editando.pasos}
++          onSave={(r) => updateAutomationRule(editando.id, r)}
++        />
++      )}
+     </div>
+   );
+ }
+diff --git a/app/home/automatizaciones/plantillas/page.tsx b/app/home/automatizaciones/plantillas/page.tsx
+index f9aa98a..b1a0df4 100644
+--- a/app/home/automatizaciones/plantillas/page.tsx
++++ b/app/home/automatizaciones/plantillas/page.tsx
+@@ -26,7 +26,7 @@ export default function AutomatizacionesPlantillasPage() {
+     t.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())
+   );
+ 
+-  function handleSave(r: { nombre: string; evento: string; accion: string }) {
++  function handleSave(r: { nombre: string; evento: string; pasos: string[] }) {
+     addAutomationRule(r);
+     setCreada(r.nombre);
+     setTimeout(() => setCreada(null), 4000);
+@@ -92,7 +92,7 @@ export default function AutomatizacionesPlantillasPage() {
+                   title={`Usar plantilla — ${t.nombre}`}
+                   initialNombre={t.nombre}
+                   initialEvento={t.evento}
+-                  initialAccion={t.accion}
++                  initialPasos={[t.accion]}
+                   onSave={(r) => handleSave(r)}
+                   trigger={
+                     <Button className="mt-4 h-9 w-full rounded-lg bg-cta text-white hover:bg-cta-hover">
+diff --git a/components/dashboard/AutomationConfigModal.tsx b/components/dashboard/AutomationConfigModal.tsx
+index 0ed2e83..3213062 100644
+--- a/components/dashboard/AutomationConfigModal.tsx
++++ b/components/dashboard/AutomationConfigModal.tsx
+@@ -1,6 +1,7 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useId, useState } from "react";
++import { Plus, Trash2 } from "lucide-react";
+ import { Button } from "@/components/animate-ui/components/buttons/button";
+ import { Input } from "@/components/ui/input";
+ import { Label } from "@/components/ui/label";
+@@ -13,6 +14,13 @@ import {
+   DialogFooter,
+   DialogTrigger,
+ } from "@/components/animate-ui/components/radix/dialog";
++import {
++  DropdownMenu,
++  DropdownMenuTrigger,
++  DropdownMenuContent,
++  DropdownMenuItem,
++  DropdownMenuSeparator,
++} from "@/components/animate-ui/components/radix/dropdown-menu";
+ import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
+ 
+ export const eventosAutomatizacion = [
+@@ -22,53 +30,108 @@ export const eventosAutomatizacion = [
+   "Etiqueta agregada",
+   "Formulario enviado",
+ ];
+-export const accionesAutomatizacion = ["Enviar email", "Agregar etiqueta", "Esperar X días", "Crear notificación"];
++
++// Sugerencias rápidas para armar pasos — quedan como punto de partida editable,
++// no como única opción posible (el input de cada paso acepta texto libre).
++export const accionesAutomatizacion = [
++  "Enviar email",
++  "Agregar etiqueta",
++  "Esperar X días",
++  "Crear notificación",
++];
+ 
+ export interface AutomationConfigResult {
+   nombre: string;
+   evento: string;
+-  accion: string;
++  pasos: string[];
++}
++
++interface PasoState {
++  id: string;
++  texto: string;
++}
++
++let pasoCounter = 0;
++function nuevoPaso(texto = ""): PasoState {
++  pasoCounter += 1;
++  return { id: `paso-${pasoCounter}`, texto };
+ }
+ 
+ export function AutomationConfigModal({
+   trigger,
++  open,
++  onOpenChange,
+   title = "Nueva automatización",
+   initialNombre = "",
+   initialEvento = eventosAutomatizacion[0],
+-  initialAccion = accionesAutomatizacion[0],
++  initialPasos = [""],
+   onSave,
+ }: {
+-  trigger: React.ReactNode;
++  trigger?: React.ReactNode;
++  open?: boolean;
++  onOpenChange?: (open: boolean) => void;
+   title?: string;
+   initialNombre?: string;
+   initialEvento?: string;
+-  initialAccion?: string;
++  initialPasos?: string[];
+   onSave: (result: AutomationConfigResult) => void;
+ }) {
+-  const [open, setOpen] = useState(false);
++  const idBase = useId();
++  const [internalOpen, setInternalOpen] = useState(false);
+   const [nombre, setNombre] = useState(initialNombre);
+   const [evento, setEvento] = useState(initialEvento);
+-  const [accion, setAccion] = useState(initialAccion);
++  const [pasos, setPasos] = useState<PasoState[]>(
++    (initialPasos.length ? initialPasos : [""]).map((texto) => nuevoPaso(texto))
++  );
++
++  // Si viene con `trigger`, es un modal auto-controlado (crear); si no, lo controla
++  // el padre vía `open`/`onOpenChange` (editar desde una fila existente).
++  const isControlled = trigger === undefined;
++  const isOpen = isControlled ? !!open : internalOpen;
+ 
+   function handleOpenChange(next: boolean) {
+-    setOpen(next);
++    if (isControlled) {
++      onOpenChange?.(next);
++    } else {
++      setInternalOpen(next);
++    }
+     if (next) {
+-      // Reinicia con los valores sugeridos de la plantilla cada vez que se abre.
++      // Reinicia con los valores sugeridos (de plantilla o de la regla a editar)
++      // cada vez que se abre.
+       setNombre(initialNombre);
+       setEvento(initialEvento);
+-      setAccion(initialAccion);
++      setPasos((initialPasos.length ? initialPasos : [""]).map((texto) => nuevoPaso(texto)));
+     }
+   }
+ 
++  const pasosValidos = pasos.map((p) => p.texto.trim()).filter(Boolean);
++  const puedeGuardar = nombre.trim().length > 0 && pasosValidos.length > 0;
++
+   function handleSave() {
+-    if (!nombre.trim()) return;
+-    onSave({ nombre: nombre.trim(), evento, accion });
+-    setOpen(false);
++    if (!puedeGuardar) return;
++    onSave({ nombre: nombre.trim(), evento, pasos: pasosValidos });
++    handleOpenChange(false);
+   }
+ 
++  function addPaso(texto = "") {
++    setPasos((prev) => [...prev, nuevoPaso(texto)]);
++  }
++
++  function updatePaso(id: string, texto: string) {
++    setPasos((prev) => prev.map((p) => (p.id === id ? { ...p, texto } : p)));
++  }
++
++  function removePaso(id: string) {
++    setPasos((prev) => (prev.length > 1 ? prev.filter((p) => p.id !== id) : prev));
++  }
++
++  const dialogProps = isControlled
++    ? { open: isOpen, onOpenChange: handleOpenChange }
++    : { open: internalOpen, onOpenChange: handleOpenChange };
++
+   return (
+-    <Dialog open={open} onOpenChange={handleOpenChange}>
+-      <DialogTrigger asChild>{trigger}</DialogTrigger>
++    <Dialog {...dialogProps}>
++      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+       <DialogContent>
+         <DialogHeader>
+           <DialogTitle>{title}</DialogTitle>
+@@ -87,9 +150,61 @@ export function AutomationConfigModal({
+             <SelectDropdown options={eventosAutomatizacion} value={evento} onChange={setEvento} />
+           </div>
+           <div className="flex flex-col gap-1.5">
+-            <Label>Acción</Label>
+-            <SelectDropdown options={accionesAutomatizacion} value={accion} onChange={setAccion} />
++            <div className="flex items-center justify-between">
++              <Label>Acciones (en orden)</Label>
++              <DropdownMenu>
++                <DropdownMenuTrigger asChild>
++                  <Button variant="outline" className="h-7 px-2 text-xs">
++                    <Plus size={13} /> Añadir paso
++                  </Button>
++                </DropdownMenuTrigger>
++                <DropdownMenuContent align="end" className="min-w-52">
++                  {accionesAutomatizacion.map((preset) => (
++                    <DropdownMenuItem key={preset} className="cursor-pointer" onSelect={() => addPaso(preset)}>
++                      {preset}
++                    </DropdownMenuItem>
++                  ))}
++                  <DropdownMenuSeparator />
++                  <DropdownMenuItem className="cursor-pointer" onSelect={() => addPaso("")}>
++                    Paso personalizado
++                  </DropdownMenuItem>
++                </DropdownMenuContent>
++              </DropdownMenu>
++            </div>
++            <div className="flex flex-col gap-2">
++              {pasos.map((p, idx) => (
++                <div key={p.id} className="flex items-center gap-2">
++                  <span
++                    aria-hidden
++                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-semibold text-text-muted"
++                  >
++                    {idx + 1}
++                  </span>
++                  <Input
++                    aria-label={`Paso ${idx + 1}`}
++                    placeholder='Ej. Enviar email, Agregar tag "vip", Esperar 2h'
++                    value={p.texto}
++                    onChange={(e) => updatePaso(p.id, e.target.value)}
++                  />
++                  <button
++                    type="button"
++                    onClick={() => removePaso(p.id)}
++                    disabled={pasos.length === 1}
++                    aria-label={`Eliminar paso ${idx + 1}`}
++                    className="shrink-0 rounded-md p-1.5 text-text-muted hover:bg-surface hover:text-error disabled:pointer-events-none disabled:opacity-30"
++                  >
++                    <Trash2 size={14} />
++                  </button>
++                </div>
++              ))}
++            </div>
++            {pasosValidos.length > 0 && (
++              <p className="mt-1 text-xs text-text-muted">
++                Vista previa: <span className="font-medium text-text-secondary">{pasosValidos.join(" + ")}</span>
++              </p>
++            )}
+           </div>
++          <p className="sr-only" id={idBase} />
+         </div>
+         <DialogFooter>
+           <DialogClose asChild>
+@@ -97,7 +212,7 @@ export function AutomationConfigModal({
+           </DialogClose>
+           <Button
+             className="bg-cta text-white hover:bg-cta-hover disabled:opacity-50"
+-            disabled={!nombre.trim()}
++            disabled={!puedeGuardar}
+             onClick={handleSave}
+           >
+             Guardar y activar
+diff --git a/lib/automations-store.ts b/lib/automations-store.ts
+index 404ca79..27585da 100644
+--- a/lib/automations-store.ts
++++ b/lib/automations-store.ts
+@@ -5,6 +5,12 @@ import { automatizacionesActivas } from "@/lib/mock-data";
+ 
+ export type ReglaAutomatizacion = (typeof automatizacionesActivas)[number];
+ 
++export interface AutomationRuleInput {
++  nombre: string;
++  evento: string;
++  pasos: string[];
++}
++
+ let reglas: ReglaAutomatizacion[] = automatizacionesActivas;
+ const listeners = new Set<() => void>();
+ 
+@@ -23,12 +29,33 @@ export function useAutomationRules() {
+   );
+ }
+ 
+-export function addAutomationRule(data: { nombre: string; evento: string; accion: string }) {
++export function addAutomationRule(data: AutomationRuleInput) {
+   const nextId = reglas.length ? Math.max(...reglas.map((r) => r.id)) + 1 : 1;
+   reglas = [...reglas, { id: nextId, estado: true, ...data }];
+   emit();
+ }
+ 
++export function updateAutomationRule(id: number, data: AutomationRuleInput) {
++  reglas = reglas.map((r) => (r.id === id ? { ...r, ...data } : r));
++  emit();
++}
++
++export function duplicateAutomationRule(id: number) {
++  const original = reglas.find((r) => r.id === id);
++  if (!original) return;
++  const nextId = Math.max(...reglas.map((r) => r.id)) + 1;
++  reglas = [
++    ...reglas,
++    { ...original, id: nextId, nombre: `${original.nombre} (copia)`, estado: false },
++  ];
++  emit();
++}
++
++export function deleteAutomationRule(id: number) {
++  reglas = reglas.filter((r) => r.id !== id);
++  emit();
++}
++
+ export function toggleAutomationRule(id: number) {
+   reglas = reglas.map((r) => (r.id === id ? { ...r, estado: !r.estado } : r));
+   emit();
+diff --git a/lib/mock-data.ts b/lib/mock-data.ts
+index 2b82cad..d37a55f 100644
+--- a/lib/mock-data.ts
++++ b/lib/mock-data.ts
+@@ -184,15 +184,15 @@ export const eventTypes = [
+ ];
+ 
+ export const automatizacionesActivas = [
+-  { id: 1, nombre: "Recordatorio de carrito", evento: "Carrito abandonado", accion: "Enviar email + esperar 24h", estado: true },
+-  { id: 2, nombre: "Bienvenida general", evento: "Contacto nuevo", accion: "Agregar tag “nuevo” + enviar email", estado: true },
+-  { id: 3, nombre: "Seguimiento post-venta", evento: "Compra realizada", accion: "Esperar 3 días + enviar email", estado: true },
+-  { id: 4, nombre: "Etiquetado interés curso", evento: "Formulario enviado", accion: "Agregar tag “interesado-curso”", estado: false },
+-  { id: 5, nombre: "Notificación venta nueva", evento: "Compra realizada", accion: "Crear notificación interna", estado: true },
+-  { id: 6, nombre: "Alerta carrito VIP", evento: "Carrito abandonado", accion: "Agregar tag “vip” + esperar 2h", estado: true },
+-  { id: 7, nombre: "Bienvenida chatbot", evento: "Contacto nuevo", accion: "Enviar email de bienvenida", estado: true },
+-  { id: 8, nombre: "Etiqueta interesado curso", evento: "Etiqueta agregada", accion: "Enviar email + esperar 24h", estado: true },
+-  { id: 9, nombre: "Seguimiento formulario", evento: "Formulario enviado", accion: "Esperar 1 día + enviar email", estado: true },
++  { id: 1, nombre: "Recordatorio de carrito", evento: "Carrito abandonado", pasos: ["Enviar email", "esperar 24h"], estado: true },
++  { id: 2, nombre: "Bienvenida general", evento: "Contacto nuevo", pasos: ["Agregar tag “nuevo”", "enviar email"], estado: true },
++  { id: 3, nombre: "Seguimiento post-venta", evento: "Compra realizada", pasos: ["Esperar 3 días", "enviar email"], estado: true },
++  { id: 4, nombre: "Etiquetado interés curso", evento: "Formulario enviado", pasos: ["Agregar tag “interesado-curso”"], estado: false },
++  { id: 5, nombre: "Notificación venta nueva", evento: "Compra realizada", pasos: ["Crear notificación interna"], estado: true },
++  { id: 6, nombre: "Alerta carrito VIP", evento: "Carrito abandonado", pasos: ["Agregar tag “vip”", "esperar 2h"], estado: true },
++  { id: 7, nombre: "Bienvenida chatbot", evento: "Contacto nuevo", pasos: ["Enviar email de bienvenida"], estado: true },
++  { id: 8, nombre: "Etiqueta interesado curso", evento: "Etiqueta agregada", pasos: ["Enviar email", "esperar 24h"], estado: true },
++  { id: 9, nombre: "Seguimiento formulario", evento: "Formulario enviado", pasos: ["Esperar 1 día", "enviar email"], estado: true },
+ ];
+ 
+ // ---------- Chatbots ----------
+-- 
+2.43.0
+

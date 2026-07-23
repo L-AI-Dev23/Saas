@@ -184,15 +184,15 @@ export const eventTypes = [
 ];
 
 export const automatizacionesActivas = [
-  { id: 1, nombre: "Recordatorio de carrito", evento: "Carrito abandonado", accion: "Enviar email + esperar 24h", estado: true },
-  { id: 2, nombre: "Bienvenida general", evento: "Contacto nuevo", accion: "Agregar tag “nuevo” + enviar email", estado: true },
-  { id: 3, nombre: "Seguimiento post-venta", evento: "Compra realizada", accion: "Esperar 3 días + enviar email", estado: true },
-  { id: 4, nombre: "Etiquetado interés curso", evento: "Formulario enviado", accion: "Agregar tag “interesado-curso”", estado: false },
-  { id: 5, nombre: "Notificación venta nueva", evento: "Compra realizada", accion: "Crear notificación interna", estado: true },
-  { id: 6, nombre: "Alerta carrito VIP", evento: "Carrito abandonado", accion: "Agregar tag “vip” + esperar 2h", estado: true },
-  { id: 7, nombre: "Bienvenida chatbot", evento: "Contacto nuevo", accion: "Enviar email de bienvenida", estado: true },
-  { id: 8, nombre: "Etiqueta interesado curso", evento: "Etiqueta agregada", accion: "Enviar email + esperar 24h", estado: true },
-  { id: 9, nombre: "Seguimiento formulario", evento: "Formulario enviado", accion: "Esperar 1 día + enviar email", estado: true },
+  { id: 1, nombre: "Recordatorio de carrito", evento: "Carrito abandonado", pasos: ["Enviar email", "esperar 24h"], estado: true },
+  { id: 2, nombre: "Bienvenida general", evento: "Contacto nuevo", pasos: ["Agregar tag “nuevo”", "enviar email"], estado: true },
+  { id: 3, nombre: "Seguimiento post-venta", evento: "Compra realizada", pasos: ["Esperar 3 días", "enviar email"], estado: true },
+  { id: 4, nombre: "Etiquetado interés curso", evento: "Formulario enviado", pasos: ["Agregar tag “interesado-curso”"], estado: false },
+  { id: 5, nombre: "Notificación venta nueva", evento: "Compra realizada", pasos: ["Crear notificación interna"], estado: true },
+  { id: 6, nombre: "Alerta carrito VIP", evento: "Carrito abandonado", pasos: ["Agregar tag “vip”", "esperar 2h"], estado: true },
+  { id: 7, nombre: "Bienvenida chatbot", evento: "Contacto nuevo", pasos: ["Enviar email de bienvenida"], estado: true },
+  { id: 8, nombre: "Etiqueta interesado curso", evento: "Etiqueta agregada", pasos: ["Enviar email", "esperar 24h"], estado: true },
+  { id: 9, nombre: "Seguimiento formulario", evento: "Formulario enviado", pasos: ["Esperar 1 día", "enviar email"], estado: true },
 ];
 
 // ---------- Chatbots ----------

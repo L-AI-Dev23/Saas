@@ -5,6 +5,12 @@ import { automatizacionesActivas } from "@/lib/mock-data";
 
 export type ReglaAutomatizacion = (typeof automatizacionesActivas)[number];
 
+export interface AutomationRuleInput {
+  nombre: string;
+  evento: string;
+  pasos: string[];
+}
+
 let reglas: ReglaAutomatizacion[] = automatizacionesActivas;
 const listeners = new Set<() => void>();
 
@@ -23,9 +29,30 @@ export function useAutomationRules() {
   );
 }
 
-export function addAutomationRule(data: { nombre: string; evento: string; accion: string }) {
+export function addAutomationRule(data: AutomationRuleInput) {
   const nextId = reglas.length ? Math.max(...reglas.map((r) => r.id)) + 1 : 1;
   reglas = [...reglas, { id: nextId, estado: true, ...data }];
+  emit();
+}
+
+export function updateAutomationRule(id: number, data: AutomationRuleInput) {
+  reglas = reglas.map((r) => (r.id === id ? { ...r, ...data } : r));
+  emit();
+}
+
+export function duplicateAutomationRule(id: number) {
+  const original = reglas.find((r) => r.id === id);
+  if (!original) return;
+  const nextId = Math.max(...reglas.map((r) => r.id)) + 1;
+  reglas = [
+    ...reglas,
+    { ...original, id: nextId, nombre: `${original.nombre} (copia)`, estado: false },
+  ];
+  emit();
+}
+
+export function deleteAutomationRule(id: number) {
+  reglas = reglas.filter((r) => r.id !== id);
   emit();
 }
 
