@@ -1,0 +1,245 @@
+From 5690cc42402d6022ff56315f5983453cb4b6422e Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Thu, 23 Jul 2026 08:11:48 +0000
+Subject: [PATCH] feat(chatbots): dashboard con grafico real de mensajes,
+ alerta de todos los bots con problemas, KPIs enlazados y boton de nuevo
+ chatbot
+
+---
+ app/home/chatbots/page.tsx             | 84 ++++++++++++++++++++------
+ components/dashboard/MessagesChart.tsx | 74 +++++++++++++++++++++++
+ lib/mock-data.ts                       | 23 ++++++-
+ 3 files changed, 160 insertions(+), 21 deletions(-)
+ create mode 100644 components/dashboard/MessagesChart.tsx
+
+diff --git a/app/home/chatbots/page.tsx b/app/home/chatbots/page.tsx
+index 4deddf48..88a60d2a 100644
+--- a/app/home/chatbots/page.tsx
++++ b/app/home/chatbots/page.tsx
+@@ -1,34 +1,82 @@
+-import { AlertTriangle } from "lucide-react";
++"use client";
++
++import { useState } from "react";
++import Link from "next/link";
++import { AlertTriangle, Plus } from "lucide-react";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
+ import { KpiRow } from "@/components/dashboard/KpiCard";
+-import { chatbotsKpis, chatbotsActivos } from "@/lib/mock-data";
++import { Button } from "@/components/animate-ui/components/buttons/button";
++import { MessagesChart } from "@/components/dashboard/MessagesChart";
++import { chatbotsKpis, chatbotsActivos, chatbotsMensajesPorDia } from "@/lib/mock-data";
++
++const RANGOS = [
++  { label: "7 días", dias: 7 },
++  { label: "30 días", dias: 30 },
++  { label: "90 días", dias: 90 },
++] as const;
+ 
+ export default function ChatbotsDashboardPage() {
+   const necesitanAtencion = chatbotsActivos.filter((b) => b.estado === "Necesita atención");
++  const [rangoDias, setRangoDias] = useState(30);
++
++  // Nota: el mock solo tiene 30 días de datos. Con datos reales, "90 días"
++  // haría un query distinto en vez de solo recortar el array.
++  const datosChart = chatbotsMensajesPorDia.slice(-Math.min(rangoDias, chatbotsMensajesPorDia.length));
++
+   return (
+     <div className="mx-auto max-w-6xl">
+-      <PageHeader title="Chatbots" description="Automatizaciones conversacionales dentro de tus redes sociales." />
++      <PageHeader
++        title="Chatbots"
++        description="Automatizaciones conversacionales dentro de tus redes sociales."
++        action={
++          <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover" asChild>
++            <Link href="/home/chatbots/plantillas">
++              <Plus size={16} /> Nuevo chatbot
++            </Link>
++          </Button>
++        }
++      />
++
+       <KpiRow items={chatbotsKpis} />
+ 
+       {necesitanAtencion.length > 0 && (
+-        <div className="mt-8 flex items-center gap-3 rounded-lg border border-error/30 bg-error/5 p-4">
+-          <AlertTriangle size={18} className="shrink-0 text-error" />
+-          <p className="text-sm text-text-primary">
+-            <span className="font-semibold">{necesitanAtencion[0].nombre}</span> necesita atención — el
+-            post/video vinculado ya no está disponible.{" "}
+-            <a href="/home/chatbots/activos" className="font-semibold text-error underline">
+-              Revisar
+-            </a>
+-          </p>
++        <div className="mt-8 flex flex-col gap-2 rounded-lg border border-error/30 bg-error/5 p-4">
++          {necesitanAtencion.map((bot) => (
++            <div key={bot.id} className="flex items-center gap-3">
++              <AlertTriangle size={18} className="shrink-0 text-error" />
++              <p className="text-sm text-text-primary">
++                <span className="font-semibold">{bot.nombre}</span> necesita atención — el post/video
++                vinculado ya no está disponible.{" "}
++                <Link href="/home/chatbots/activos" className="font-semibold text-error underline">
++                  Revisar
++                </Link>
++              </p>
++            </div>
++          ))}
+         </div>
+       )}
+ 
+-      <div className="mt-8 rounded-lg border border-border bg-white p-6 shadow-sg-sm">
+-        <h2 className="mb-4 text-base font-semibold text-text-primary">Mensajes — últimos 30 días</h2>
+-        <div className="flex h-36 items-end gap-2">
+-          {[30, 45, 38, 60, 52, 70, 65, 80, 58, 75, 90, 68].map((v, i) => (
+-            <div key={i} className="flex-1 rounded-t-md bg-accent/70" style={{ height: `${v * 1.6}px` }} />
+-          ))}
++      <div id="mensajes-chart" className="mt-8 flex h-[320px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm scroll-mt-24">
++        <div className="mb-4 flex items-center justify-between">
++          <h2 className="text-base font-semibold text-text-primary">Mensajes por día</h2>
++          <div className="flex gap-1 rounded-md bg-background p-1">
++            {RANGOS.map((r) => (
++              <button
++                key={r.dias}
++                onClick={() => setRangoDias(r.dias)}
++                className={
++                  rangoDias === r.dias
++                    ? "rounded px-2.5 py-1 text-xs font-medium bg-white text-text-primary shadow-sg-sm"
++                    : "rounded px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
++                }
++              >
++                {r.label}
++              </button>
++            ))}
++          </div>
++        </div>
++        <div className="min-h-0 flex-1">
++          <MessagesChart data={datosChart} />
+         </div>
+       </div>
+     </div>
+diff --git a/components/dashboard/MessagesChart.tsx b/components/dashboard/MessagesChart.tsx
+new file mode 100644
+index 00000000..f258c7b2
+--- /dev/null
++++ b/components/dashboard/MessagesChart.tsx
+@@ -0,0 +1,74 @@
++"use client";
++
++import {
++  AreaChart,
++  Area,
++  XAxis,
++  YAxis,
++  Tooltip,
++  ResponsiveContainer,
++  CartesianGrid,
++} from "recharts";
++
++type MessagePoint = {
++  fecha: string;
++  fechaCorta: string;
++  mensajes: number;
++};
++
++function ChartTooltip({
++  active,
++  payload,
++}: {
++  active?: boolean;
++  payload?: { payload: MessagePoint }[];
++}) {
++  if (!active || !payload?.length) return null;
++  const point = payload[0].payload;
++  return (
++    <div className="rounded-md border border-border bg-white px-3 py-2 shadow-sg-md">
++      <p className="text-xs font-medium text-text-secondary">{point.fechaCorta}</p>
++      <p className="text-sm font-semibold text-text-primary">{point.mensajes} mensajes</p>
++    </div>
++  );
++}
++
++export function MessagesChart({ data }: { data: MessagePoint[] }) {
++  return (
++    <div
++      className="h-full w-full"
++      role="img"
++      aria-label={`Gráfico de mensajes por día, del ${data[0]?.fechaCorta} al ${data[data.length - 1]?.fechaCorta}`}
++    >
++      <ResponsiveContainer width="100%" height="100%">
++        <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
++          <defs>
++            <linearGradient id="mensajesGradient" x1="0" y1="0" x2="0" y2="1">
++              <stop offset="0%" stopColor="var(--color-accent, #18181b)" stopOpacity={0.5} />
++              <stop offset="100%" stopColor="var(--color-accent, #18181b)" stopOpacity={0} />
++            </linearGradient>
++          </defs>
++          <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
++          <XAxis
++            dataKey="fechaCorta"
++            tickLine={false}
++            axisLine={false}
++            tick={{ fontSize: 11, fill: "#8a94a6" }}
++            interval={4}
++            minTickGap={20}
++          />
++          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#8a94a6" }} width={36} />
++          <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }} />
++          <Area
++            type="monotone"
++            dataKey="mensajes"
++            stroke="var(--color-accent, #18181b)"
++            strokeWidth={2}
++            fill="url(#mensajesGradient)"
++            activeDot={{ r: 4 }}
++          />
++        </AreaChart>
++      </ResponsiveContainer>
++    </div>
++  );
++}
+diff --git a/lib/mock-data.ts b/lib/mock-data.ts
+index 11a98f82..c1f03283 100644
+--- a/lib/mock-data.ts
++++ b/lib/mock-data.ts
+@@ -181,11 +181,27 @@ export const automatizacionesActivas = [
+ 
+ // ---------- Chatbots ----------
+ export const chatbotsKpis = [
+-  { label: "Bots activos", value: "6" },
+-  { label: "Mensajes del mes", value: "12,480" },
+-  { label: "Contactos capturados", value: "834" },
++  { label: "Bots activos", value: "6", href: "/home/chatbots/activos" },
++  { label: "Mensajes del mes", value: "13,380", href: "#mensajes-chart" },
++  { label: "Contactos capturados", value: "834", href: "/home/crm/contactos" },
+ ];
+ 
++// Serie de 30 días con fechas reales para el gráfico de mensajes del dashboard.
++// Cuando se conecte a Supabase, esto se reemplaza por un query agregado por día.
++const mensajesPorDiaValores = [
++  260, 310, 290, 340, 300, 380, 350, 420, 360, 400, 440, 380, 460, 410, 500,
++  430, 480, 520, 450, 540, 490, 560, 510, 580, 530, 600, 560, 620, 590, 640,
++];
++
++export const chatbotsMensajesPorDia = mensajesPorDiaValores.map((valor, i) => {
++  const fecha = subDays(new Date(), mensajesPorDiaValores.length - 1 - i);
++  return {
++    fecha: format(fecha, "yyyy-MM-dd"),
++    fechaCorta: format(fecha, "d MMM", { locale: es }),
++    mensajes: valor,
++  };
++});
++
+ export const chatbotTemplates = [
+   { id: "comment_to_dm", nombre: "Comentario → DM", desc: "Responde por DM a quien comente en tu post." },
+   { id: "keyword_reply", nombre: "Palabra clave", desc: "Responde automáticamente según palabras clave en DM." },
+@@ -200,6 +216,7 @@ export const chatbotsActivos = [
+   { id: 3, nombre: "FAQ palabra clave", tipo: "Palabra clave", red: "Messenger", estado: "Activo", mensajes: 2210 },
+   { id: 4, nombre: "Catálogo TikTok Shop", tipo: "Flujo con catálogo", red: "TikTok", estado: "Necesita atención", mensajes: 640 },
+   { id: 5, nombre: "Captura leads curso", tipo: "Captura de datos", red: "Instagram", estado: "Activo", mensajes: 1620 },
++  { id: 6, nombre: "Bienvenida Messenger", tipo: "Bienvenida", red: "Messenger", estado: "Activo", mensajes: 900 },
+ ];
+ 
+ export const chatbotCampanas = [
+-- 
+2.43.0
+

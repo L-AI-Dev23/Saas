@@ -181,10 +181,26 @@ export const automatizacionesActivas = [
 
 // ---------- Chatbots ----------
 export const chatbotsKpis = [
-  { label: "Bots activos", value: "6" },
-  { label: "Mensajes del mes", value: "12,480" },
-  { label: "Contactos capturados", value: "834" },
+  { label: "Bots activos", value: "6", href: "/home/chatbots/activos" },
+  { label: "Mensajes del mes", value: "13,380", href: "#mensajes-chart" },
+  { label: "Contactos capturados", value: "834", href: "/home/crm/contactos" },
 ];
+
+// Serie de 30 días con fechas reales para el gráfico de mensajes del dashboard.
+// Cuando se conecte a Supabase, esto se reemplaza por un query agregado por día.
+const mensajesPorDiaValores = [
+  260, 310, 290, 340, 300, 380, 350, 420, 360, 400, 440, 380, 460, 410, 500,
+  430, 480, 520, 450, 540, 490, 560, 510, 580, 530, 600, 560, 620, 590, 640,
+];
+
+export const chatbotsMensajesPorDia = mensajesPorDiaValores.map((valor, i) => {
+  const fecha = subDays(new Date(), mensajesPorDiaValores.length - 1 - i);
+  return {
+    fecha: format(fecha, "yyyy-MM-dd"),
+    fechaCorta: format(fecha, "d MMM", { locale: es }),
+    mensajes: valor,
+  };
+});
 
 export const chatbotTemplates = [
   { id: "comment_to_dm", nombre: "Comentario → DM", desc: "Responde por DM a quien comente en tu post." },
@@ -200,6 +216,7 @@ export const chatbotsActivos = [
   { id: 3, nombre: "FAQ palabra clave", tipo: "Palabra clave", red: "Messenger", estado: "Activo", mensajes: 2210 },
   { id: 4, nombre: "Catálogo TikTok Shop", tipo: "Flujo con catálogo", red: "TikTok", estado: "Necesita atención", mensajes: 640 },
   { id: 5, nombre: "Captura leads curso", tipo: "Captura de datos", red: "Instagram", estado: "Activo", mensajes: 1620 },
+  { id: 6, nombre: "Bienvenida Messenger", tipo: "Bienvenida", red: "Messenger", estado: "Activo", mensajes: 900 },
 ];
 
 export const chatbotCampanas = [
