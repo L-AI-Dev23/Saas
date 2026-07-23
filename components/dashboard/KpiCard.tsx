@@ -1,14 +1,18 @@
+import Link from "next/link";
+
 export function KpiCard({
   label,
   value,
   delta,
+  href,
 }: {
   label: string;
   value: string;
   delta?: string;
+  href?: string;
 }) {
-  return (
-    <div className="rounded-lg border border-border bg-white p-5 shadow-sg-sm">
+  const content = (
+    <>
       <p className="text-sm font-medium text-text-secondary">{label}</p>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="text-2xl font-semibold text-text-primary">{value}</span>
@@ -26,11 +30,24 @@ export function KpiCard({
           </span>
         )}
       </div>
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="block rounded-lg border border-border bg-white p-5 shadow-sg-sm transition-shadow hover:shadow-sg-md"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="rounded-lg border border-border bg-white p-5 shadow-sg-sm">{content}</div>;
 }
 
-export function KpiRow({ items }: { items: { label: string; value: string; delta?: string }[] }) {
+export function KpiRow({ items }: { items: { label: string; value: string; delta?: string; href?: string }[] }) {
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {items.map((item) => (

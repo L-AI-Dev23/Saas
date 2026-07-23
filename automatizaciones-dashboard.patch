@@ -1,0 +1,356 @@
+From eb9a106c70267d7db56529de72133f528d138de3 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Thu, 23 Jul 2026 07:54:37 +0000
+Subject: [PATCH] feat(automatizaciones): dashboard con ejecuciones fallidas
+ clicables, grafico de ejecuciones, KPIs enlazados y boton de nueva
+ automatizacion
+
+Tambien agrega .gitignore (faltaba y el build local metia .next/ al repo).
+---
+ .gitignore                               | 24 ++++++
+ app/home/automatizaciones/page.tsx       | 99 ++++++++++++++++++++----
+ components/dashboard/ExecutionsChart.tsx | 70 +++++++++++++++++
+ components/dashboard/KpiCard.tsx         | 25 +++++-
+ lib/mock-data.ts                         | 39 +++++++++-
+ 5 files changed, 233 insertions(+), 24 deletions(-)
+ create mode 100644 .gitignore
+ create mode 100644 components/dashboard/ExecutionsChart.tsx
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 00000000..25d94270
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,24 @@
++# dependencies
++/node_modules
++
++# next.js
++/.next/
++/out/
++
++# production
++/build
++
++# misc
++.DS_Store
++*.pem
++
++# debug
++npm-debug.log*
++yarn-debug.log*
++yarn-error.log*
++
++# local env files
++.env*.local
++
++# typescript
++*.tsbuildinfo
+diff --git a/app/home/automatizaciones/page.tsx b/app/home/automatizaciones/page.tsx
+index 0caec9ba..a9087ffa 100644
+--- a/app/home/automatizaciones/page.tsx
++++ b/app/home/automatizaciones/page.tsx
+@@ -1,33 +1,98 @@
+-import { AlertTriangle } from "lucide-react";
++"use client";
++
++import { useState } from "react";
++import Link from "next/link";
++import { AlertTriangle, ChevronRight, Plus } from "lucide-react";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
+ import { KpiRow } from "@/components/dashboard/KpiCard";
+-import { automatizacionesKpis } from "@/lib/mock-data";
++import { Button } from "@/components/animate-ui/components/buttons/button";
++import { ExecutionsChart } from "@/components/dashboard/ExecutionsChart";
++import { automatizacionesKpis, automatizacionesFallidas, automatizacionesEjecucionesPorDia } from "@/lib/mock-data";
++
++const RANGOS = [
++  { label: "7 días", dias: 7 },
++  { label: "30 días", dias: 30 },
++  { label: "90 días", dias: 90 },
++] as const;
+ 
+ export default function AutomatizacionesDashboardPage() {
++  const [rangoDias, setRangoDias] = useState(30);
++
++  // Nota: el mock solo tiene 30 días de datos. Con datos reales, "90 días"
++  // haría un query distinto en vez de solo recortar el array.
++  const datosChart = automatizacionesEjecucionesPorDia.slice(
++    -Math.min(rangoDias, automatizacionesEjecucionesPorDia.length)
++  );
++
+   return (
+     <div className="mx-auto max-w-6xl">
+-      <PageHeader title="Automatizaciones" description="Triggers basados en eventos de negocio, ejecutados con Trigger.dev." />
++      <PageHeader
++        title="Automatizaciones"
++        description="Triggers basados en eventos de negocio, ejecutados con Trigger.dev."
++        action={
++          <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover" asChild>
++            <Link href="/home/automatizaciones/activas">
++              <Plus size={16} /> Nueva automatización
++            </Link>
++          </Button>
++        }
++      />
++
+       <KpiRow items={automatizacionesKpis} />
+ 
++      <div id="ejecuciones-chart" className="mt-8 flex h-[320px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm scroll-mt-24">
++        <div className="mb-4 flex items-center justify-between">
++          <h2 className="text-base font-semibold text-text-primary">Ejecuciones por día</h2>
++          <div className="flex gap-1 rounded-md bg-background p-1">
++            {RANGOS.map((r) => (
++              <button
++                key={r.dias}
++                onClick={() => setRangoDias(r.dias)}
++                className={
++                  rangoDias === r.dias
++                    ? "rounded px-2.5 py-1 text-xs font-medium bg-white text-text-primary shadow-sg-sm"
++                    : "rounded px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
++                }
++              >
++                {r.label}
++              </button>
++            ))}
++          </div>
++        </div>
++        <div className="min-h-0 flex-1">
++          <ExecutionsChart data={datosChart} />
++        </div>
++      </div>
++
+       <div className="mt-8 rounded-lg border border-border bg-white p-6 shadow-sg-sm">
+         <div className="mb-4 flex items-center gap-2">
+           <AlertTriangle size={16} className="text-error" />
+           <h2 className="text-base font-semibold text-text-primary">Últimas ejecuciones fallidas</h2>
+         </div>
+-        <div className="divide-y divide-border">
+-          {[
+-            { nombre: "Etiquetado interés curso", motivo: "Contacto sin email válido", fecha: "hoy 09:14" },
+-            { nombre: "Recordatorio de carrito", motivo: "Plantilla de email eliminada", fecha: "ayer 22:03" },
+-          ].map((f, i) => (
+-            <div key={i} className="flex items-center justify-between py-3 text-sm">
+-              <div>
+-                <p className="font-medium text-text-primary">{f.nombre}</p>
+-                <p className="text-xs text-text-secondary">{f.motivo}</p>
+-              </div>
+-              <span className="text-xs text-text-muted">{f.fecha}</span>
+-            </div>
+-          ))}
+-        </div>
++        {automatizacionesFallidas.length === 0 ? (
++          <p className="py-6 text-center text-sm text-text-muted">
++            Sin ejecuciones fallidas recientes 🎉
++          </p>
++        ) : (
++          <div className="divide-y divide-border">
++            {automatizacionesFallidas.map((f) => (
++              <Link
++                key={f.id}
++                href={f.href}
++                className="flex items-center justify-between gap-3 rounded-md py-3 pl-2 pr-2 transition-colors hover:bg-background"
++              >
++                <div className="min-w-0">
++                  <p className="font-medium text-text-primary">{f.nombre}</p>
++                  <p className="text-xs text-text-secondary">{f.motivo}</p>
++                </div>
++                <div className="flex shrink-0 items-center gap-2">
++                  <span className="text-xs text-text-muted">{f.fecha}</span>
++                  <ChevronRight size={16} className="text-text-muted" />
++                </div>
++              </Link>
++            ))}
++          </div>
++        )}
+       </div>
+     </div>
+   );
+diff --git a/components/dashboard/ExecutionsChart.tsx b/components/dashboard/ExecutionsChart.tsx
+new file mode 100644
+index 00000000..84f4a22e
+--- /dev/null
++++ b/components/dashboard/ExecutionsChart.tsx
+@@ -0,0 +1,70 @@
++"use client";
++
++import {
++  BarChart,
++  Bar,
++  XAxis,
++  YAxis,
++  Tooltip,
++  ResponsiveContainer,
++  CartesianGrid,
++  Legend,
++} from "recharts";
++
++type ExecutionPoint = {
++  fecha: string;
++  fechaCorta: string;
++  exitosas: number;
++  fallidas: number;
++};
++
++function ChartTooltip({
++  active,
++  payload,
++}: {
++  active?: boolean;
++  payload?: { payload: ExecutionPoint }[];
++}) {
++  if (!active || !payload?.length) return null;
++  const point = payload[0].payload;
++  return (
++    <div className="rounded-md border border-border bg-white px-3 py-2 shadow-sg-md">
++      <p className="text-xs font-medium text-text-secondary">{point.fechaCorta}</p>
++      <p className="text-sm font-semibold text-text-primary">{point.exitosas} exitosas</p>
++      <p className="text-sm font-semibold text-error">{point.fallidas} fallidas</p>
++    </div>
++  );
++}
++
++export function ExecutionsChart({ data }: { data: ExecutionPoint[] }) {
++  return (
++    <div
++      className="h-full w-full"
++      role="img"
++      aria-label={`Gráfico de ejecuciones por día, del ${data[0]?.fechaCorta} al ${data[data.length - 1]?.fechaCorta}`}
++    >
++      <ResponsiveContainer width="100%" height="100%">
++        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
++          <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
++          <XAxis
++            dataKey="fechaCorta"
++            tickLine={false}
++            axisLine={false}
++            tick={{ fontSize: 11, fill: "#8a94a6" }}
++            interval={4}
++            minTickGap={20}
++          />
++          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#8a94a6" }} width={36} />
++          <Tooltip content={<ChartTooltip />} cursor={{ fill: "#f4f4f5" }} />
++          <Legend
++            iconType="circle"
++            iconSize={8}
++            formatter={(value) => <span className="text-xs text-text-secondary">{value}</span>}
++          />
++          <Bar dataKey="exitosas" name="Exitosas" stackId="a" fill="var(--color-cta, #18181b)" radius={[0, 0, 0, 0]} />
++          <Bar dataKey="fallidas" name="Fallidas" stackId="a" fill="var(--color-error, #ef4444)" radius={[3, 3, 0, 0]} />
++        </BarChart>
++      </ResponsiveContainer>
++    </div>
++  );
++}
+diff --git a/components/dashboard/KpiCard.tsx b/components/dashboard/KpiCard.tsx
+index 941bda02..2766f554 100644
+--- a/components/dashboard/KpiCard.tsx
++++ b/components/dashboard/KpiCard.tsx
+@@ -1,14 +1,18 @@
++import Link from "next/link";
++
+ export function KpiCard({
+   label,
+   value,
+   delta,
++  href,
+ }: {
+   label: string;
+   value: string;
+   delta?: string;
++  href?: string;
+ }) {
+-  return (
+-    <div className="rounded-lg border border-border bg-white p-5 shadow-sg-sm">
++  const content = (
++    <>
+       <p className="text-sm font-medium text-text-secondary">{label}</p>
+       <div className="mt-2 flex items-baseline gap-2">
+         <span className="text-2xl font-semibold text-text-primary">{value}</span>
+@@ -26,11 +30,24 @@ export function KpiCard({
+           </span>
+         )}
+       </div>
+-    </div>
++    </>
+   );
++
++  if (href) {
++    return (
++      <Link
++        href={href}
++        className="block rounded-lg border border-border bg-white p-5 shadow-sg-sm transition-shadow hover:shadow-sg-md"
++      >
++        {content}
++      </Link>
++    );
++  }
++
++  return <div className="rounded-lg border border-border bg-white p-5 shadow-sg-sm">{content}</div>;
+ }
+ 
+-export function KpiRow({ items }: { items: { label: string; value: string; delta?: string }[] }) {
++export function KpiRow({ items }: { items: { label: string; value: string; delta?: string; href?: string }[] }) {
+   return (
+     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+       {items.map((item) => (
+diff --git a/lib/mock-data.ts b/lib/mock-data.ts
+index a4e180cb..11a98f82 100644
+--- a/lib/mock-data.ts
++++ b/lib/mock-data.ts
+@@ -119,9 +119,37 @@ export const emailCampanas = [
+ 
+ // ---------- Automatizaciones ----------
+ export const automatizacionesKpis = [
+-  { label: "Automatizaciones activas", value: "9" },
+-  { label: "Ejecuciones (mes)", value: "2,318" },
+-  { label: "Tasa de éxito", value: "97.4%" },
++  { label: "Automatizaciones activas", value: "9", href: "/home/automatizaciones/activas" },
++  { label: "Ejecuciones (mes)", value: "2,318", href: "#ejecuciones-chart" },
++  { label: "Tasa de éxito", value: "97.4%", href: "#ejecuciones-chart" },
++];
++
++// Serie de 30 días de ejecuciones (exitosas vs fallidas) para el gráfico del dashboard.
++// Cuando se conecte a Trigger.dev/Supabase, esto sale de un query agregado por día.
++const ejecucionesPorDiaValores: [number, number][] = [
++  [58, 2], [64, 1], [70, 3], [61, 2], [75, 1], [80, 4], [72, 2],
++  [85, 1], [90, 3], [78, 2], [95, 1], [88, 2], [102, 3], [97, 1],
++  [110, 2], [105, 4], [99, 1], [115, 2], [120, 1], [108, 3],
++  [125, 2], [130, 1], [118, 2], [135, 3], [128, 1], [140, 2],
++  [133, 1], [145, 3], [138, 2], [150, 1],
++];
++
++export const automatizacionesEjecucionesPorDia = ejecucionesPorDiaValores.map(([exitosas, fallidas], i) => {
++  const fecha = subDays(new Date(), ejecucionesPorDiaValores.length - 1 - i);
++  return {
++    fecha: format(fecha, "yyyy-MM-dd"),
++    fechaCorta: format(fecha, "d MMM", { locale: es }),
++    exitosas,
++    fallidas,
++  };
++});
++
++// Nota: por ahora cada fila enlaza a la vista de reglas activas, no a la ejecución
++// puntual (el mock no tiene un log de ejecuciones con id propio). Cuando esto
++// venga de Trigger.dev, el href debería apuntar directo al log de esa corrida.
++export const automatizacionesFallidas = [
++  { id: 1, nombre: "Etiquetado interés curso", motivo: "Contacto sin email válido", fecha: "hoy 09:14", href: "/home/automatizaciones/activas" },
++  { id: 2, nombre: "Recordatorio de carrito", motivo: "Plantilla de email eliminada", fecha: "ayer 22:03", href: "/home/automatizaciones/activas" },
+ ];
+ 
+ export const automatizacionesPlantillas = [
+@@ -144,6 +172,11 @@ export const automatizacionesActivas = [
+   { id: 2, nombre: "Bienvenida general", evento: "Contacto nuevo", accion: "Agregar tag “nuevo” + enviar email", estado: true },
+   { id: 3, nombre: "Seguimiento post-venta", evento: "Compra realizada", accion: "Esperar 3 días + enviar email", estado: true },
+   { id: 4, nombre: "Etiquetado interés curso", evento: "Formulario enviado", accion: "Agregar tag “interesado-curso”", estado: false },
++  { id: 5, nombre: "Notificación venta nueva", evento: "Compra realizada", accion: "Crear notificación interna", estado: true },
++  { id: 6, nombre: "Alerta carrito VIP", evento: "Carrito abandonado", accion: "Agregar tag “vip” + esperar 2h", estado: true },
++  { id: 7, nombre: "Bienvenida chatbot", evento: "Contacto nuevo", accion: "Enviar email de bienvenida", estado: true },
++  { id: 8, nombre: "Etiqueta interesado curso", evento: "Etiqueta agregada", accion: "Enviar email + esperar 24h", estado: true },
++  { id: 9, nombre: "Seguimiento formulario", evento: "Formulario enviado", accion: "Esperar 1 día + enviar email", estado: true },
+ ];
+ 
+ // ---------- Chatbots ----------
+-- 
+2.43.0
+

@@ -119,9 +119,37 @@ export const emailCampanas = [
 
 // ---------- Automatizaciones ----------
 export const automatizacionesKpis = [
-  { label: "Automatizaciones activas", value: "9" },
-  { label: "Ejecuciones (mes)", value: "2,318" },
-  { label: "Tasa de éxito", value: "97.4%" },
+  { label: "Automatizaciones activas", value: "9", href: "/home/automatizaciones/activas" },
+  { label: "Ejecuciones (mes)", value: "2,318", href: "#ejecuciones-chart" },
+  { label: "Tasa de éxito", value: "97.4%", href: "#ejecuciones-chart" },
+];
+
+// Serie de 30 días de ejecuciones (exitosas vs fallidas) para el gráfico del dashboard.
+// Cuando se conecte a Trigger.dev/Supabase, esto sale de un query agregado por día.
+const ejecucionesPorDiaValores: [number, number][] = [
+  [58, 2], [64, 1], [70, 3], [61, 2], [75, 1], [80, 4], [72, 2],
+  [85, 1], [90, 3], [78, 2], [95, 1], [88, 2], [102, 3], [97, 1],
+  [110, 2], [105, 4], [99, 1], [115, 2], [120, 1], [108, 3],
+  [125, 2], [130, 1], [118, 2], [135, 3], [128, 1], [140, 2],
+  [133, 1], [145, 3], [138, 2], [150, 1],
+];
+
+export const automatizacionesEjecucionesPorDia = ejecucionesPorDiaValores.map(([exitosas, fallidas], i) => {
+  const fecha = subDays(new Date(), ejecucionesPorDiaValores.length - 1 - i);
+  return {
+    fecha: format(fecha, "yyyy-MM-dd"),
+    fechaCorta: format(fecha, "d MMM", { locale: es }),
+    exitosas,
+    fallidas,
+  };
+});
+
+// Nota: por ahora cada fila enlaza a la vista de reglas activas, no a la ejecución
+// puntual (el mock no tiene un log de ejecuciones con id propio). Cuando esto
+// venga de Trigger.dev, el href debería apuntar directo al log de esa corrida.
+export const automatizacionesFallidas = [
+  { id: 1, nombre: "Etiquetado interés curso", motivo: "Contacto sin email válido", fecha: "hoy 09:14", href: "/home/automatizaciones/activas" },
+  { id: 2, nombre: "Recordatorio de carrito", motivo: "Plantilla de email eliminada", fecha: "ayer 22:03", href: "/home/automatizaciones/activas" },
 ];
 
 export const automatizacionesPlantillas = [
@@ -144,6 +172,11 @@ export const automatizacionesActivas = [
   { id: 2, nombre: "Bienvenida general", evento: "Contacto nuevo", accion: "Agregar tag “nuevo” + enviar email", estado: true },
   { id: 3, nombre: "Seguimiento post-venta", evento: "Compra realizada", accion: "Esperar 3 días + enviar email", estado: true },
   { id: 4, nombre: "Etiquetado interés curso", evento: "Formulario enviado", accion: "Agregar tag “interesado-curso”", estado: false },
+  { id: 5, nombre: "Notificación venta nueva", evento: "Compra realizada", accion: "Crear notificación interna", estado: true },
+  { id: 6, nombre: "Alerta carrito VIP", evento: "Carrito abandonado", accion: "Agregar tag “vip” + esperar 2h", estado: true },
+  { id: 7, nombre: "Bienvenida chatbot", evento: "Contacto nuevo", accion: "Enviar email de bienvenida", estado: true },
+  { id: 8, nombre: "Etiqueta interesado curso", evento: "Etiqueta agregada", accion: "Enviar email + esperar 24h", estado: true },
+  { id: 9, nombre: "Seguimiento formulario", evento: "Formulario enviado", accion: "Esperar 1 día + enviar email", estado: true },
 ];
 
 // ---------- Chatbots ----------
