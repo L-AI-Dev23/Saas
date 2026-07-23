@@ -39,3 +39,25 @@ export function KpiRow({ items }: { items: { label: string; value: string; delta
     </div>
   );
 }
+
+function KpiCardSkeleton() {
+  return (
+    <div className="rounded-lg border border-border bg-white p-5 shadow-sg-sm">
+      <div className="h-3.5 w-24 animate-pulse rounded bg-border" />
+      <div className="mt-3 flex items-baseline gap-2">
+        <div className="h-7 w-16 animate-pulse rounded bg-border" />
+        <div className="h-3.5 w-8 animate-pulse rounded bg-border" />
+      </div>
+    </div>
+  );
+}
+
+export function KpiRowSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <KpiCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
