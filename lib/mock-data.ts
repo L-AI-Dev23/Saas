@@ -85,11 +85,27 @@ export const mensajesPorConversacion: Record<number, { id: number; from: "contac
 
 // ---------- Email ----------
 export const emailKpis = [
-  { label: "Enviados (mes)", value: "8,412" },
-  { label: "Open rate promedio", value: "38%" },
-  { label: "Click rate promedio", value: "11%" },
-  { label: "Contactos suscritos", value: "3,096" },
+  { label: "Enviados (mes)", value: "8,412", href: "#envios-chart" },
+  { label: "Open rate promedio", value: "38%", href: "#envios-chart" },
+  { label: "Click rate promedio", value: "11%", href: "#envios-chart" },
+  { label: "Contactos suscritos", value: "3,096", href: "/home/email/listas" },
 ];
+
+// Serie de 30 días con fechas reales para el gráfico de envíos del dashboard.
+// Cuando se conecte al proveedor de email, esto se reemplaza por un query agregado por día.
+const enviosPorDiaValores = [
+  180, 240, 150, 290, 380, 220, 310, 400, 210, 340, 460, 350, 300, 420, 260,
+  390, 480, 330, 410, 500, 280, 440, 520, 360, 450, 530, 310, 470, 540, 420,
+];
+
+export const emailEnviosPorDia = enviosPorDiaValores.map((valor, i) => {
+  const fecha = subDays(new Date(), enviosPorDiaValores.length - 1 - i);
+  return {
+    fecha: format(fecha, "yyyy-MM-dd"),
+    fechaCorta: format(fecha, "d MMM", { locale: es }),
+    envios: valor,
+  };
+});
 
 export const emailListas = [
   { id: 1, nombre: "Newsletter general", tipo: "Manual", contactos: 2140, actualizado: "hace 2 días" },
