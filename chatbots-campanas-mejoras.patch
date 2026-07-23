@@ -1,0 +1,869 @@
+diff --git a/app/home/chatbots/activos/page.tsx b/app/home/chatbots/activos/page.tsx
+index 283c566..0ebffa7 100644
+--- a/app/home/chatbots/activos/page.tsx
++++ b/app/home/chatbots/activos/page.tsx
+@@ -1,11 +1,98 @@
+-import { Plus, AlertTriangle } from "lucide-react";
++"use client";
++
++import { useMemo, useState } from "react";
++import { useRouter } from "next/navigation";
++import {
++  Plus,
++  AlertTriangle,
++  Search,
++  MoreHorizontal,
++  Pencil,
++  Copy,
++  Trash2,
++  Pause,
++  Play,
++  RefreshCw,
++  Bot,
++} from "lucide-react";
+ import { Button } from "@/components/animate-ui/components/buttons/button";
++import { Input } from "@/components/ui/input";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
+ import { StatusBadge } from "@/components/dashboard/StatusBadge";
+-import { chatbotsActivos } from "@/lib/mock-data";
++import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
++import { Toggle } from "@/components/base/toggle/toggle";
++import { ChatbotConfigModal, type ChatbotConfigInitialData } from "@/components/dashboard/ChatbotConfigModal";
++import {
++  DropdownMenu,
++  DropdownMenuTrigger,
++  DropdownMenuContent,
++  DropdownMenuItem,
++  DropdownMenuSeparator,
++} from "@/components/animate-ui/components/radix/dropdown-menu";
++import { chatbotsActivos, chatbotTemplates } from "@/lib/mock-data";
+ import { cn } from "@/lib/utils";
+ 
++type Bot = (typeof chatbotsActivos)[number];
++
++const redes = ["Todas las redes", "Instagram", "Messenger", "TikTok"];
++const estados = ["Todos los estados", "Activo", "Pausado", "Necesita atención"];
++
++function estadoDisplay(bot: Bot) {
++  if (!bot.activo) return "Pausado";
++  return bot.estado;
++}
++
++// Prefill de config existente por bot — en un backend real vendría de la API.
++function initialDataFor(bot: Bot): ChatbotConfigInitialData {
++  return {
++    origen:
++      bot.red === "Instagram"
++        ? "Instagram — @codew.pe"
++        : bot.red === "Messenger"
++          ? "Messenger — Codew Agencia"
++          : "TikTok — no conectada, ir a Configuración → Cuentas",
++    alcance: "general",
++    keywords: bot.templateId === "keyword_reply" || bot.templateId === "comment_to_dm" ? ["precio", "info"] : [],
++    selectedProducts: [],
++  };
++}
++
+ export default function ChatbotsActivosPage() {
++  const router = useRouter();
++  const [bots, setBots] = useState<Bot[]>(chatbotsActivos);
++  const [busqueda, setBusqueda] = useState("");
++  const [filtroRed, setFiltroRed] = useState(redes[0]);
++  const [filtroEstado, setFiltroEstado] = useState(estados[0]);
++  const [editando, setEditando] = useState<Bot | null>(null);
++
++  const filtrados = useMemo(() => {
++    return bots.filter((b) => {
++      const coincideBusqueda = b.nombre.toLowerCase().includes(busqueda.trim().toLowerCase());
++      const coincideRed = filtroRed === redes[0] || b.red === filtroRed;
++      const coincideEstado = filtroEstado === estados[0] || estadoDisplay(b) === filtroEstado;
++      return coincideBusqueda && coincideRed && coincideEstado;
++    });
++  }, [bots, busqueda, filtroRed, filtroEstado]);
++
++  function toggleActivo(id: Bot["id"]) {
++    setBots((prev) => prev.map((b) => (b.id === id ? { ...b, activo: !b.activo } : b)));
++  }
++
++  function duplicar(bot: Bot) {
++    setBots((prev) => {
++      const nextId = Math.max(...prev.map((b) => b.id)) + 1;
++      return [...prev, { ...bot, id: nextId, nombre: `${bot.nombre} (copia)`, mensajes: 0 }];
++    });
++  }
++
++  function eliminar(id: Bot["id"]) {
++    setBots((prev) => prev.filter((b) => b.id !== id));
++  }
++
++  const templateName = editando
++    ? chatbotTemplates.find((t) => t.id === editando.templateId)?.nombre ?? editando.tipo
++    : "";
++
+   return (
+     <div className="mx-auto max-w-6xl">
+       <PageHeader
+@@ -20,46 +107,150 @@ export default function ChatbotsActivosPage() {
+         }
+       />
+ 
+-      <div className="overflow-hidden rounded-lg border border-border bg-white">
+-        <table className="w-full text-left text-sm">
+-          <thead className="bg-surface text-xs font-semibold uppercase text-text-muted">
+-            <tr>
+-              <th className="px-5 py-3">Nombre</th>
+-              <th className="px-5 py-3">Tipo</th>
+-              <th className="px-5 py-3">Red social</th>
+-              <th className="px-5 py-3">Estado</th>
+-              <th className="px-5 py-3">Mensajes (mes)</th>
+-              <th className="px-5 py-3" />
+-            </tr>
+-          </thead>
+-          <tbody className="divide-y divide-border">
+-            {chatbotsActivos.map((b) => (
+-              <tr
+-                key={b.id}
+-                className={cn("hover:bg-surface", b.estado === "Necesita atención" && "bg-warning/5")}
+-              >
+-                <td className="px-5 py-3 font-medium text-text-primary">
+-                  <div className="flex items-center gap-2">
+-                    {b.estado === "Necesita atención" && (
+-                      <AlertTriangle size={14} className="shrink-0 text-error" />
+-                    )}
+-                    {b.nombre}
+-                  </div>
+-                </td>
+-                <td className="px-5 py-3 text-text-secondary">{b.tipo}</td>
+-                <td className="px-5 py-3 text-text-secondary">{b.red}</td>
+-                <td className="px-5 py-3">
+-                  <StatusBadge label={b.estado} />
+-                </td>
+-                <td className="px-5 py-3 text-text-secondary">{b.mensajes.toLocaleString()}</td>
+-                <td className="px-5 py-3 text-right">
+-                  <button className="text-xs font-semibold text-cta hover:underline">Editar</button>
+-                </td>
+-              </tr>
+-            ))}
+-          </tbody>
+-        </table>
++      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
++        <div className="relative flex-1 sm:max-w-xs">
++          <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
++          <Input
++            placeholder="Buscar chatbot…"
++            value={busqueda}
++            onChange={(e) => setBusqueda(e.target.value)}
++            className="pl-8"
++          />
++        </div>
++        <div className="flex gap-2">
++          <SelectDropdown options={redes} value={filtroRed} onChange={setFiltroRed} className="w-40" />
++          <SelectDropdown options={estados} value={filtroEstado} onChange={setFiltroEstado} className="w-48" />
++        </div>
+       </div>
++
++      {filtrados.length === 0 ? (
++        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
++          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-text-muted">
++            <Bot size={22} />
++          </span>
++          {bots.length === 0 ? (
++            <>
++              <p className="text-sm font-semibold text-text-primary">Todavía no tienes chatbots activos</p>
++              <p className="mt-1 max-w-sm text-sm text-text-secondary">
++                Crea tu primer bot a partir de una plantilla para empezar a automatizar tus conversaciones.
++              </p>
++              <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover" asChild>
++                <a href="/home/chatbots/plantillas">
++                  <Plus size={16} /> Nuevo chatbot
++                </a>
++              </Button>
++            </>
++          ) : (
++            <>
++              <p className="text-sm font-semibold text-text-primary">Ningún bot coincide con tu búsqueda</p>
++              <p className="mt-1 max-w-sm text-sm text-text-secondary">
++                Prueba con otro término o ajusta los filtros de red social y estado.
++              </p>
++            </>
++          )}
++        </div>
++      ) : (
++        <div className="overflow-hidden rounded-lg border border-border bg-white">
++          <table className="w-full text-left text-sm">
++            <thead className="bg-surface text-xs font-semibold uppercase text-text-muted">
++              <tr>
++                <th className="px-5 py-3">Nombre</th>
++                <th className="px-5 py-3">Tipo</th>
++                <th className="px-5 py-3">Red social</th>
++                <th className="px-5 py-3">Estado</th>
++                <th className="px-5 py-3">Activo</th>
++                <th className="px-5 py-3">Mensajes (mes)</th>
++                <th className="px-5 py-3" />
++              </tr>
++            </thead>
++            <tbody className="divide-y divide-border">
++              {filtrados.map((b) => {
++                const necesitaAtencion = b.estado === "Necesita atención";
++                return (
++                  <tr
++                    key={b.id}
++                    onClick={() => setEditando(b)}
++                    className={cn("cursor-pointer hover:bg-surface", necesitaAtencion && "bg-warning/5")}
++                  >
++                    <td className="px-5 py-3 font-medium text-text-primary">
++                      <div className="flex items-center gap-2">
++                        {necesitaAtencion && <AlertTriangle size={14} className="shrink-0 text-error" />}
++                        {b.nombre}
++                      </div>
++                    </td>
++                    <td className="px-5 py-3 text-text-secondary">{b.tipo}</td>
++                    <td className="px-5 py-3 text-text-secondary">{b.red}</td>
++                    <td className="px-5 py-3">
++                      <StatusBadge label={estadoDisplay(b)} />
++                    </td>
++                    <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
++                      <Toggle
++                        isSelected={b.activo}
++                        onChange={() => toggleActivo(b.id)}
++                        aria-label={`Activar ${b.nombre}`}
++                      />
++                    </td>
++                    <td className="px-5 py-3 text-text-secondary">{b.mensajes.toLocaleString()}</td>
++                    <td className="px-5 py-3 text-right" onClick={(e) => e.stopPropagation()}>
++                      <div className="flex items-center justify-end gap-3">
++                        {necesitaAtencion && (
++                          <button
++                            onClick={() => router.push("/home/configuracion")}
++                            className="flex items-center gap-1 text-xs font-semibold text-error hover:underline"
++                          >
++                            <RefreshCw size={12} /> Revisar
++                          </button>
++                        )}
++                        <DropdownMenu>
++                          <DropdownMenuTrigger asChild>
++                            <button
++                              className="rounded-md p-1.5 text-text-muted hover:bg-surface hover:text-text-primary"
++                              aria-label={`Más acciones para ${b.nombre}`}
++                            >
++                              <MoreHorizontal size={16} />
++                            </button>
++                          </DropdownMenuTrigger>
++                          <DropdownMenuContent align="end" className="min-w-44">
++                            <DropdownMenuItem className="cursor-pointer" onSelect={() => setEditando(b)}>
++                              <Pencil size={14} /> Editar
++                            </DropdownMenuItem>
++                            <DropdownMenuItem className="cursor-pointer" onSelect={() => toggleActivo(b.id)}>
++                              {b.activo ? <Pause size={14} /> : <Play size={14} />}
++                              {b.activo ? "Pausar" : "Reanudar"}
++                            </DropdownMenuItem>
++                            <DropdownMenuItem className="cursor-pointer" onSelect={() => duplicar(b)}>
++                              <Copy size={14} /> Duplicar
++                            </DropdownMenuItem>
++                            <DropdownMenuSeparator />
++                            <DropdownMenuItem
++                              variant="destructive"
++                              className="cursor-pointer"
++                              onSelect={() => eliminar(b.id)}
++                            >
++                              <Trash2 size={14} /> Eliminar
++                            </DropdownMenuItem>
++                          </DropdownMenuContent>
++                        </DropdownMenu>
++                      </div>
++                    </td>
++                  </tr>
++                );
++              })}
++            </tbody>
++          </table>
++        </div>
++      )}
++
++      {editando && (
++        <ChatbotConfigModal
++          mode="edit"
++          templateId={editando.templateId}
++          templateName={templateName}
++          open={!!editando}
++          onOpenChange={(open) => !open && setEditando(null)}
++          initialData={initialDataFor(editando)}
++        />
++      )}
+     </div>
+   );
+ }
+diff --git a/app/home/chatbots/campanas/page.tsx b/app/home/chatbots/campanas/page.tsx
+index 0722a0f..974ecef 100644
+--- a/app/home/chatbots/campanas/page.tsx
++++ b/app/home/chatbots/campanas/page.tsx
+@@ -1,82 +1,334 @@
+ "use client";
+ 
+-import { Plus } from "lucide-react";
++import { useMemo, useState } from "react";
++import { Plus, Megaphone, Trash2, MessageSquare, AlertCircle } from "lucide-react";
+ import { Button } from "@/components/animate-ui/components/buttons/button";
+ import { Input } from "@/components/ui/input";
+ import { Label } from "@/components/ui/label";
+-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
++import {
++  Dialog,
++  DialogClose,
++  DialogContent,
++  DialogHeader,
++  DialogTitle,
++  DialogFooter,
++  DialogTrigger,
++} from "@/components/animate-ui/components/radix/dialog";
++import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/animate-ui/components/radix/sheet";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
++import { StatusBadge } from "@/components/dashboard/StatusBadge";
++import { CampaignBotsChart } from "@/components/dashboard/CampaignBotsChart";
+ import { chatbotCampanas, chatbotsActivos } from "@/lib/mock-data";
+ import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
++import { Tabs, TabList } from "@/components/application/tabs/tabs";
++import { cn } from "@/lib/utils";
++
++type Campana = (typeof chatbotCampanas)[number];
++
++function estadoCampana(c: Campana): "Activa" | "Próxima" | "Finalizada" {
++  const hoy = new Date();
++  const inicio = new Date(c.inicio);
++  const fin = new Date(c.fin);
++  if (hoy < inicio) return "Próxima";
++  if (hoy > fin) return "Finalizada";
++  return "Activa";
++}
++
++function formatFecha(iso: string) {
++  return new Date(iso + "T00:00:00").toLocaleDateString("es-PE", {
++    day: "2-digit",
++    month: "short",
++    year: "numeric",
++  });
++}
++
++// Campañas (activas o próximas) en las que ya participa un bot, para avisar solapamientos.
++function campanasDeBot(botId: number, campanas: Campana[], excluirId?: number) {
++  return campanas.filter(
++    (c) => c.id !== excluirId && c.botIds.includes(botId) && estadoCampana(c) !== "Finalizada"
++  );
++}
++
++const emptyForm = { nombre: "", inicio: "", fin: "", botIds: [] as number[] };
+ 
+ export default function ChatbotCampanasPage() {
++  const [campanas, setCampanas] = useState<Campana[]>(chatbotCampanas);
++  const [filtro, setFiltro] = useState<"activas" | "todas">("todas");
++  const [dialogOpen, setDialogOpen] = useState(false);
++  const [form, setForm] = useState(emptyForm);
++  const [seleccionada, setSeleccionada] = useState<Campana | null>(null);
++
++  const visibles = useMemo(() => {
++    if (filtro === "todas") return campanas;
++    return campanas.filter((c) => estadoCampana(c) === "Activa");
++  }, [campanas, filtro]);
++
++  const errorFechas = form.inicio && form.fin && form.fin < form.inicio;
++  const puedeCrear = form.nombre.trim() && form.inicio && form.fin && !errorFechas && form.botIds.length > 0;
++
++  function toggleBotForm(id: number) {
++    setForm((f) => ({
++      ...f,
++      botIds: f.botIds.includes(id) ? f.botIds.filter((b) => b !== id) : [...f.botIds, id],
++    }));
++  }
++
++  function crearCampana() {
++    if (!puedeCrear) return;
++    const nextId = campanas.length ? Math.max(...campanas.map((c) => c.id)) + 1 : 1;
++    setCampanas((prev) => [...prev, { id: nextId, ...form }]);
++    setForm(emptyForm);
++    setDialogOpen(false);
++  }
++
++  function eliminarCampana(id: number) {
++    setCampanas((prev) => prev.filter((c) => c.id !== id));
++    setSeleccionada(null);
++  }
++
++  const botsDeSeleccionada = seleccionada
++    ? chatbotsActivos.filter((b) => seleccionada.botIds.includes(b.id))
++    : [];
++  const totalMensajes = botsDeSeleccionada.reduce((sum, b) => sum + b.mensajes, 0);
++  const chartData = botsDeSeleccionada
++    .map((b) => ({ nombre: b.nombre, mensajes: b.mensajes }))
++    .sort((a, b) => b.mensajes - a.mensajes);
++
+   return (
+     <div className="mx-auto max-w-6xl">
+       <PageHeader
+         title="Campañas de chatbots"
+         description="Agrupa varios bots para medir su impacto conjunto."
+         action={
+-          <Dialog>
+-            <DialogTrigger asChild>
+-              <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover">
+-                <Plus size={16} /> Nueva campaña
+-              </Button>
+-            </DialogTrigger>
+-            <DialogContent>
+-              <DialogHeader>
+-                <DialogTitle>Nueva campaña de chatbots</DialogTitle>
+-              </DialogHeader>
+-              <div className="flex flex-col gap-4 py-2">
+-                <div className="flex flex-col gap-1.5">
+-                  <Label>Nombre</Label>
+-                  <Input placeholder="Ej. Campaña Verano 2026" />
+-                </div>
+-                <div className="grid grid-cols-2 gap-3">
++          <div className="flex items-center gap-2">
++            <Tabs selectedKey={filtro} onSelectionChange={(key) => setFiltro(key as "activas" | "todas")}>
++              <TabList
++                type="button-border"
++                size="sm"
++                items={[
++                  { id: "activas", label: "Activas" },
++                  { id: "todas", label: "Todas" },
++                ]}
++              />
++            </Tabs>
++            <Dialog open={dialogOpen} onOpenChange={(open) => {
++              setDialogOpen(open);
++              if (!open) setForm(emptyForm);
++            }}>
++              <DialogTrigger asChild>
++                <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover">
++                  <Plus size={16} /> Nueva campaña
++                </Button>
++              </DialogTrigger>
++              <DialogContent className="max-h-[85vh] overflow-y-auto">
++                <DialogHeader>
++                  <DialogTitle>Nueva campaña de chatbots</DialogTitle>
++                </DialogHeader>
++                <div className="flex flex-col gap-4 py-2">
+                   <div className="flex flex-col gap-1.5">
+-                    <Label>Inicio</Label>
+-                    <Input type="date" />
++                    <Label>Nombre</Label>
++                    <Input
++                      placeholder="Ej. Campaña Verano 2026"
++                      value={form.nombre}
++                      onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
++                    />
+                   </div>
+-                  <div className="flex flex-col gap-1.5">
+-                    <Label>Fin</Label>
+-                    <Input type="date" />
++                  <div className="grid grid-cols-2 gap-3">
++                    <div className="flex flex-col gap-1.5">
++                      <Label>Inicio</Label>
++                      <Input
++                        type="date"
++                        value={form.inicio}
++                        onChange={(e) => setForm((f) => ({ ...f, inicio: e.target.value }))}
++                      />
++                    </div>
++                    <div className="flex flex-col gap-1.5">
++                      <Label>Fin</Label>
++                      <Input
++                        type="date"
++                        value={form.fin}
++                        onChange={(e) => setForm((f) => ({ ...f, fin: e.target.value }))}
++                      />
++                    </div>
+                   </div>
+-                </div>
+-                <div className="flex flex-col gap-1.5">
+-                  <Label>Chatbots a agrupar</Label>
+-                  <div className="flex flex-col gap-1 rounded-lg border border-border p-2">
+-                    {chatbotsActivos.map((b) => (
+-                      <label
+-                        key={b.id}
+-                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface"
+-                      >
+-                        <Checkbox />
+-                        {b.nombre}
+-                      </label>
+-                    ))}
++                  {errorFechas && (
++                    <p className="flex items-center gap-1.5 text-xs font-medium text-error">
++                      <AlertCircle size={13} /> La fecha de fin debe ser posterior a la de inicio.
++                    </p>
++                  )}
++                  <div className="flex flex-col gap-1.5">
++                    <div className="flex items-center justify-between">
++                      <Label>Chatbots a agrupar</Label>
++                      <span className="text-xs text-text-muted">{form.botIds.length} seleccionados</span>
++                    </div>
++                    <div className="flex flex-col gap-1 rounded-lg border border-border p-2">
++                      {chatbotsActivos.map((b) => {
++                        const solapadas = campanasDeBot(b.id, campanas);
++                        return (
++                          <label
++                            key={b.id}
++                            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface"
++                          >
++                            <Checkbox
++                              checked={form.botIds.includes(b.id)}
++                              onCheckedChange={() => toggleBotForm(b.id)}
++                            />
++                            <span>{b.nombre}</span>
++                            {solapadas.length > 0 && (
++                              <span className="ml-auto text-xs font-normal text-text-muted">
++                                también en: {solapadas.map((c) => c.nombre).join(", ")}
++                              </span>
++                            )}
++                          </label>
++                        );
++                      })}
++                    </div>
+                   </div>
+                 </div>
+-              </div>
+-              <DialogFooter>
+-                <DialogClose asChild>
+-                  <Button variant="outline">Cancelar</Button>
+-                </DialogClose>
+-                <Button className="bg-cta text-white hover:bg-cta-hover">Crear campaña</Button>
+-              </DialogFooter>
+-            </DialogContent>
+-          </Dialog>
++                <DialogFooter>
++                  <DialogClose asChild>
++                    <Button variant="outline">Cancelar</Button>
++                  </DialogClose>
++                  <Button
++                    className="bg-cta text-white hover:bg-cta-hover disabled:opacity-50"
++                    disabled={!puedeCrear}
++                    onClick={crearCampana}
++                  >
++                    Crear campaña
++                  </Button>
++                </DialogFooter>
++              </DialogContent>
++            </Dialog>
++          </div>
+         }
+       />
+ 
+-      <div className="grid gap-4 sm:grid-cols-2">
+-        {chatbotCampanas.map((c) => (
+-          <div key={c.id} className="rounded-lg border border-border bg-white p-5 shadow-sg-sm">
+-            <p className="text-sm font-semibold text-text-primary">{c.nombre}</p>
+-            <p className="mt-1 text-xs text-text-secondary">
+-              {c.bots} bots agrupados · {c.inicio} — {c.fin}
+-            </p>
+-          </div>
+-        ))}
+-      </div>
++      {visibles.length === 0 ? (
++        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
++          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-text-muted">
++            <Megaphone size={22} />
++          </span>
++          {campanas.length === 0 ? (
++            <>
++              <p className="text-sm font-semibold text-text-primary">Todavía no tienes campañas</p>
++              <p className="mt-1 max-w-sm text-sm text-text-secondary">
++                Agrupa varios chatbots en una campaña para medir su impacto conjunto en mensajes y conversiones.
++              </p>
++              <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover" onClick={() => setDialogOpen(true)}>
++                <Plus size={16} /> Nueva campaña
++              </Button>
++            </>
++          ) : (
++            <>
++              <p className="text-sm font-semibold text-text-primary">No hay campañas activas ahora mismo</p>
++              <p className="mt-1 max-w-sm text-sm text-text-secondary">
++                Cambia a la pestaña &quot;Todas&quot; para ver campañas próximas o finalizadas.
++              </p>
++            </>
++          )}
++        </div>
++      ) : (
++        <div className="grid gap-4 sm:grid-cols-2">
++          {visibles.map((c) => {
++            const bots = chatbotsActivos.filter((b) => c.botIds.includes(b.id));
++            const mensajes = bots.reduce((sum, b) => sum + b.mensajes, 0);
++            const estado = estadoCampana(c);
++            return (
++              <button
++                key={c.id}
++                onClick={() => setSeleccionada(c)}
++                className="flex flex-col rounded-lg border border-border bg-white p-5 text-left shadow-sg-sm transition-shadow hover:shadow-sg-md"
++              >
++                <div className="flex items-start justify-between gap-3">
++                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
++                    <Megaphone size={18} />
++                  </span>
++                  <StatusBadge label={estado} />
++                </div>
++                <p className="mt-3 text-sm font-semibold text-text-primary">{c.nombre}</p>
++                <p className="mt-1 text-xs text-text-secondary">
++                  {c.botIds.length} {c.botIds.length === 1 ? "bot agrupado" : "bots agrupados"} · {formatFecha(c.inicio)} — {formatFecha(c.fin)}
++                </p>
++                <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
++                  <MessageSquare size={13} className="text-text-muted" />
++                  {mensajes.toLocaleString()} mensajes en total
++                </p>
++              </button>
++            );
++          })}
++        </div>
++      )}
++
++      {/* Drawer de detalle de campaña */}
++      <Sheet open={!!seleccionada} onOpenChange={(open) => !open && setSeleccionada(null)}>
++        <SheetContent side="right" className="max-w-md gap-0 p-6">
++          {seleccionada && (
++            <>
++              <SheetHeader className="mb-6 p-0">
++                <div className="flex items-center gap-2">
++                  <SheetTitle className="text-lg">{seleccionada.nombre}</SheetTitle>
++                  <StatusBadge label={estadoCampana(seleccionada)} />
++                </div>
++              </SheetHeader>
++
++              <div className="flex flex-col gap-5 text-sm">
++                <div>
++                  <p className="text-xs font-semibold uppercase text-text-muted">Duración</p>
++                  <p className="text-text-primary">
++                    {formatFecha(seleccionada.inicio)} — {formatFecha(seleccionada.fin)}
++                  </p>
++                </div>
++
++                <div>
++                  <p className="text-xs font-semibold uppercase text-text-muted">Mensajes totales</p>
++                  <p className="text-2xl font-semibold text-text-primary">{totalMensajes.toLocaleString()}</p>
++                </div>
++
++                <div className="border-t border-border pt-4">
++                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Mensajes por bot</p>
++                  {chartData.length > 0 ? (
++                    <CampaignBotsChart data={chartData} />
++                  ) : (
++                    <p className="text-xs text-text-muted">Esta campaña no tiene bots agrupados.</p>
++                  )}
++                </div>
++
++                <div className="border-t border-border pt-4">
++                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Bots agrupados</p>
++                  <ul className="flex flex-col gap-2">
++                    {botsDeSeleccionada.map((b) => {
++                      const otras = campanasDeBot(b.id, campanas, seleccionada.id);
++                      return (
++                        <li key={b.id} className={cn("rounded-lg border border-border px-3 py-2")}>
++                          <div className="flex items-center justify-between">
++                            <span className="font-medium text-text-primary">{b.nombre}</span>
++                            <span className="text-xs text-text-secondary">{b.mensajes.toLocaleString()} msj</span>
++                          </div>
++                          {otras.length > 0 && (
++                            <p className="mt-1 text-xs text-text-muted">
++                              También en: {otras.map((c) => c.nombre).join(", ")}
++                            </p>
++                          )}
++                        </li>
++                      );
++                    })}
++                  </ul>
++                </div>
++
++                <div className="border-t border-border pt-4">
++                  <Button
++                    variant="outline"
++                    className="w-full text-error hover:bg-error/5 hover:text-error"
++                    onClick={() => eliminarCampana(seleccionada.id)}
++                  >
++                    <Trash2 size={14} /> Eliminar campaña
++                  </Button>
++                </div>
++              </div>
++            </>
++          )}
++        </SheetContent>
++      </Sheet>
+     </div>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/components/dashboard/CampaignBotsChart.tsx b/components/dashboard/CampaignBotsChart.tsx
+new file mode 100644
+index 0000000..79208b7
+--- /dev/null
++++ b/components/dashboard/CampaignBotsChart.tsx
+@@ -0,0 +1,43 @@
++"use client";
++
++import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
++
++type BotPoint = {
++  nombre: string;
++  mensajes: number;
++};
++
++function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: BotPoint }[] }) {
++  if (!active || !payload?.length) return null;
++  const point = payload[0].payload;
++  return (
++    <div className="rounded-md border border-border bg-white px-3 py-2 shadow-sg-md">
++      <p className="text-xs font-medium text-text-secondary">{point.nombre}</p>
++      <p className="text-sm font-semibold text-text-primary">{point.mensajes.toLocaleString()} mensajes</p>
++    </div>
++  );
++}
++
++export function CampaignBotsChart({ data }: { data: BotPoint[] }) {
++  const height = Math.max(data.length * 36, 80);
++  return (
++    <div className="w-full" style={{ height }} role="img" aria-label="Mensajes por bot en esta campaña">
++      <ResponsiveContainer width="100%" height="100%">
++        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
++          <CartesianGrid horizontal={false} stroke="#e5e7eb" strokeDasharray="3 3" />
++          <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#8a94a6" }} />
++          <YAxis
++            type="category"
++            dataKey="nombre"
++            tickLine={false}
++            axisLine={false}
++            width={140}
++            tick={{ fontSize: 11, fill: "#374151" }}
++          />
++          <Tooltip content={<ChartTooltip />} cursor={{ fill: "#f3f4f6" }} />
++          <Bar dataKey="mensajes" fill="var(--color-accent, #18181b)" radius={[0, 4, 4, 0]} barSize={16} />
++        </BarChart>
++      </ResponsiveContainer>
++    </div>
++  );
++}
+diff --git a/components/dashboard/ChatbotConfigModal.tsx b/components/dashboard/ChatbotConfigModal.tsx
+index 7bedd2d..f29b198 100644
+--- a/components/dashboard/ChatbotConfigModal.tsx
++++ b/components/dashboard/ChatbotConfigModal.tsx
+@@ -25,22 +25,39 @@ const origenes = [
+   "TikTok — no conectada, ir a Configuración → Cuentas",
+ ];
+ 
++export interface ChatbotConfigInitialData {
++  origen?: string;
++  alcance?: "general" | "especifico";
++  keywords?: string[];
++  selectedProducts?: number[];
++}
++
+ export function ChatbotConfigModal({
+   templateId,
+   templateName,
+   trigger,
++  mode = "create",
++  open,
++  onOpenChange,
++  initialData,
++  onSave,
+ }: {
+   templateId: string;
+   templateName: string;
+-  trigger: React.ReactNode;
++  trigger?: React.ReactNode;
++  mode?: "create" | "edit";
++  open?: boolean;
++  onOpenChange?: (open: boolean) => void;
++  initialData?: ChatbotConfigInitialData;
++  onSave?: () => void;
+ }) {
+   const [keywords, setKeywords] = useState<string[]>(
+-    templateId === "keyword_reply" ? ["precio", "info"] : []
++    initialData?.keywords ?? (templateId === "keyword_reply" ? ["precio", "info"] : [])
+   );
+   const [keywordInput, setKeywordInput] = useState("");
+-  const [alcance, setAlcance] = useState<"general" | "especifico">("general");
+-  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+-  const [origen, setOrigen] = useState(origenes[0]);
++  const [alcance, setAlcance] = useState<"general" | "especifico">(initialData?.alcance ?? "general");
++  const [selectedProducts, setSelectedProducts] = useState<number[]>(initialData?.selectedProducts ?? []);
++  const [origen, setOrigen] = useState(initialData?.origen ?? origenes[0]);
+ 
+   const showKeywords = templateId === "keyword_reply" || templateId === "comment_to_dm";
+   const showCommentReply = templateId === "comment_to_dm";
+@@ -53,12 +70,21 @@ export function ChatbotConfigModal({
+     }
+   }
+ 
++  function handleSave() {
++    onSave?.();
++    onOpenChange?.(false);
++  }
++
++  const dialogProps = trigger ? {} : { open, onOpenChange };
++
+   return (
+-    <Dialog>
+-      <DialogTrigger asChild>{trigger}</DialogTrigger>
++    <Dialog {...dialogProps}>
++      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+         <DialogHeader>
+-          <DialogTitle>Configurar chatbot — {templateName}</DialogTitle>
++          <DialogTitle>
++            {mode === "edit" ? "Editar chatbot" : "Configurar chatbot"} — {templateName}
++          </DialogTitle>
+         </DialogHeader>
+ 
+         <div className="flex flex-col gap-6 py-2">
+@@ -185,7 +211,9 @@ export function ChatbotConfigModal({
+           <DialogClose asChild>
+             <Button variant="outline">Cancelar</Button>
+           </DialogClose>
+-          <Button className="bg-cta text-white hover:bg-cta-hover">Guardar y activar</Button>
++          <Button className="bg-cta text-white hover:bg-cta-hover" onClick={handleSave}>
++            {mode === "edit" ? "Guardar cambios" : "Guardar y activar"}
++          </Button>
+         </DialogFooter>
+       </DialogContent>
+     </Dialog>
+diff --git a/components/dashboard/StatusBadge.tsx b/components/dashboard/StatusBadge.tsx
+index 21811c5..40d903c 100644
+--- a/components/dashboard/StatusBadge.tsx
++++ b/components/dashboard/StatusBadge.tsx
+@@ -7,6 +7,9 @@ const styles: Record<string, string> = {
+   conectada: "bg-success/10 text-success border-success/20",
+   cliente: "bg-success/10 text-success border-success/20",
+   enviada: "bg-success/10 text-success border-success/20",
++  activa: "bg-success/10 text-success border-success/20",
++  proxima: "bg-link/10 text-link border-link/20",
++  finalizada: "bg-text-muted/10 text-text-secondary border-border",
+   pausado: "bg-warning/10 text-warning border-warning/20",
+   pausada: "bg-warning/10 text-warning border-warning/20",
+   programada: "bg-link/10 text-link border-link/20",
+diff --git a/lib/mock-data.ts b/lib/mock-data.ts
+index 2fa8e12..15dace0 100644
+--- a/lib/mock-data.ts
++++ b/lib/mock-data.ts
+@@ -227,17 +227,17 @@ export const chatbotTemplates = [
+ ];
+ 
+ export const chatbotsActivos = [
+-  { id: 1, nombre: "Bienvenida IG", tipo: "Bienvenida", red: "Instagram", estado: "Activo", mensajes: 3120 },
+-  { id: 2, nombre: "Promo comentarios reel", tipo: "Comentario → DM", red: "Instagram", estado: "Activo", mensajes: 4890 },
+-  { id: 3, nombre: "FAQ palabra clave", tipo: "Palabra clave", red: "Messenger", estado: "Activo", mensajes: 2210 },
+-  { id: 4, nombre: "Catálogo TikTok Shop", tipo: "Flujo con catálogo", red: "TikTok", estado: "Necesita atención", mensajes: 640 },
+-  { id: 5, nombre: "Captura leads curso", tipo: "Captura de datos", red: "Instagram", estado: "Activo", mensajes: 1620 },
+-  { id: 6, nombre: "Bienvenida Messenger", tipo: "Bienvenida", red: "Messenger", estado: "Activo", mensajes: 900 },
++  { id: 1, nombre: "Bienvenida IG", tipo: "Bienvenida", templateId: "welcome", red: "Instagram", estado: "Activo", activo: true, mensajes: 3120 },
++  { id: 2, nombre: "Promo comentarios reel", tipo: "Comentario → DM", templateId: "comment_to_dm", red: "Instagram", estado: "Activo", activo: true, mensajes: 4890 },
++  { id: 3, nombre: "FAQ palabra clave", tipo: "Palabra clave", templateId: "keyword_reply", red: "Messenger", estado: "Activo", activo: true, mensajes: 2210 },
++  { id: 4, nombre: "Catálogo TikTok Shop", tipo: "Flujo con catálogo", templateId: "catalog_flow", red: "TikTok", estado: "Necesita atención", activo: true, mensajes: 640 },
++  { id: 5, nombre: "Captura leads curso", tipo: "Captura de datos", templateId: "data_capture", red: "Instagram", estado: "Activo", activo: true, mensajes: 1620 },
++  { id: 6, nombre: "Bienvenida Messenger", tipo: "Bienvenida", templateId: "welcome", red: "Messenger", estado: "Activo", activo: true, mensajes: 900 },
+ ];
+ 
+ export const chatbotCampanas = [
+-  { id: 1, nombre: "Campaña Verano 2026", bots: 3, inicio: "01 jul 2026", fin: "31 ago 2026" },
+-  { id: 2, nombre: "Lanzamiento curso Excel", bots: 2, inicio: "15 jul 2026", fin: "30 jul 2026" },
++  { id: 1, nombre: "Campaña Verano 2026", botIds: [1, 2, 5], inicio: "2026-07-01", fin: "2026-08-31" },
++  { id: 2, nombre: "Lanzamiento curso Excel", botIds: [3, 5], inicio: "2026-07-15", fin: "2026-07-30" },
+ ];
+ 
+ // ---------- CRM ----------

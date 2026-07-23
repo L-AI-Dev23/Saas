@@ -236,8 +236,8 @@ export const chatbotsActivos = [
 ];
 
 export const chatbotCampanas = [
-  { id: 1, nombre: "Campaña Verano 2026", bots: 3, inicio: "01 jul 2026", fin: "31 ago 2026" },
-  { id: 2, nombre: "Lanzamiento curso Excel", bots: 2, inicio: "15 jul 2026", fin: "30 jul 2026" },
+  { id: 1, nombre: "Campaña Verano 2026", botIds: [1, 2, 5], inicio: "2026-07-01", fin: "2026-08-31" },
+  { id: 2, nombre: "Lanzamiento curso Excel", botIds: [3, 5], inicio: "2026-07-15", fin: "2026-07-30" },
 ];
 
 // ---------- CRM ----------
