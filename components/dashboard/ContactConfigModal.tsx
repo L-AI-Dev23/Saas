@@ -15,14 +15,9 @@ import {
 } from "@/components/animate-ui/components/radix/dialog";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
 import type { ContactoInput } from "@/lib/contacts-store";
+import { useEtapasCrm } from "@/lib/crm-config-store";
 
 export const origenesContacto = ["chatbot", "email", "manual", "catalogo"];
-export const etapasContacto = [
-  { key: "nuevo", label: "Nuevo" },
-  { key: "en_conversacion", label: "En conversación" },
-  { key: "cliente", label: "Cliente" },
-  { key: "inactivo", label: "Inactivo" },
-];
 
 export function ContactConfigModal({
   trigger,
@@ -31,6 +26,7 @@ export function ContactConfigModal({
   trigger: React.ReactNode;
   onSave: (data: ContactoInput) => void;
 }) {
+  const etapasContacto = useEtapasCrm();
   const [open, setOpen] = useState(false);
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -53,7 +49,7 @@ export function ContactConfigModal({
 
   function handleSave() {
     if (!puedeGuardar) return;
-    const etapa = etapasContacto.find((e) => e.label === etapaLabel)?.key ?? "nuevo";
+    const etapa = etapasContacto.find((e) => e.label === etapaLabel)?.key ?? etapasContacto[0].key;
     onSave({ nombre: nombre.trim(), email: email.trim(), telefono: telefono.trim(), origen, etapa, tags: [] });
     handleOpenChange(false);
   }

@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Table2, Kanban, Search, MoreHorizontal, Pencil, Trash2, Users, X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
-import { ContactConfigModal, etapasContacto, origenesContacto } from "@/components/dashboard/ContactConfigModal";
+import { ContactConfigModal, origenesContacto } from "@/components/dashboard/ContactConfigModal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -15,7 +16,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/animate-ui/components/radix/dropdown-menu";
-import { crmTags } from "@/lib/mock-data";
+import { useTags } from "@/lib/tags-store";
+import { useEtapasCrm } from "@/lib/crm-config-store";
 import {
   useContactos,
   addContacto,
@@ -28,14 +30,26 @@ import {
 import { Tabs, TabList } from "@/components/application/tabs/tabs";
 import { TextArea } from "@/components/base/textarea/textarea";
 
-const etapas = etapasContacto;
 const origenesFiltro = ["Todos los orígenes", ...origenesContacto];
-const etapasFiltro = ["Todas las etapas", ...etapas.map((e) => e.label)];
 
 export default function ContactosPage() {
+  return (
+    <Suspense fallback={null}>
+      <ContactosPageContent />
+    </Suspense>
+  );
+}
+
+function ContactosPageContent() {
   const contactos = useContactos();
+  const etapas = useEtapasCrm();
+  const etapasFiltro = useMemo(() => ["Todas las etapas", ...etapas.map((e) => e.label)], [etapas]);
   const [view, setView] = useState<"tabla" | "kanban">("tabla");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tagFiltro = searchParams.get("tag");
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroOrigen, setFiltroOrigen] = useState(origenesFiltro[0]);
@@ -51,9 +65,14 @@ export default function ContactosPage() {
       const coincideOrigen = filtroOrigen === origenesFiltro[0] || c.origen === filtroOrigen;
       const coincideEtapa =
         filtroEtapa === etapasFiltro[0] || etapas.find((e) => e.key === c.etapa)?.label === filtroEtapa;
-      return coincideBusqueda && coincideOrigen && coincideEtapa;
+      const coincideTag = !tagFiltro || c.tags.includes(tagFiltro);
+      return coincideBusqueda && coincideOrigen && coincideEtapa && coincideTag;
     });
-  }, [contactos, busqueda, filtroOrigen, filtroEtapa]);
+  }, [contactos, busqueda, filtroOrigen, filtroEtapa, etapas, etapasFiltro, tagFiltro]);
+
+  function limpiarFiltroTag() {
+    router.push("/home/crm/contactos");
+  }
 
   function eliminar(id: number) {
     deleteContacto(id);
@@ -114,6 +133,18 @@ export default function ContactosPage() {
             <SelectDropdown options={origenesFiltro} value={filtroOrigen} onChange={setFiltroOrigen} className="w-44" />
             <SelectDropdown options={etapasFiltro} value={filtroEtapa} onChange={setFiltroEtapa} className="w-48" />
           </div>
+          {tagFiltro && (
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary">
+              Etiqueta: {tagFiltro}
+              <button
+                onClick={limpiarFiltroTag}
+                aria-label="Quitar filtro de etiqueta"
+                className="text-text-muted hover:text-error"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
         </div>
       )}
 
@@ -248,6 +279,8 @@ function ContactoDetalle({
   onVolver: () => void;
   onEliminar: () => void;
 }) {
+  const etapas = useEtapasCrm();
+  const tags = useTags();
   const [formNombre, setFormNombre] = useState(contacto.nombre);
   const [formEmail, setFormEmail] = useState(contacto.email);
   const [formTelefono, setFormTelefono] = useState(contacto.telefono);
@@ -255,7 +288,7 @@ function ContactoDetalle({
     etapas.find((e) => e.key === contacto.etapa)?.label ?? ""
   );
 
-  const etiquetasDisponibles = crmTags.map((t) => t.nombre).filter((n) => !contacto.tags.includes(n));
+  const etiquetasDisponibles = tags.map((t) => t.nombre).filter((n) => !contacto.tags.includes(n));
 
   function guardarCambios() {
     const etapa = etapas.find((e) => e.label === formEtapaLabel)?.key ?? contacto.etapa;

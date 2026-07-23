@@ -61,3 +61,17 @@ export function removeTagFromContacto(id: number, tag: string) {
   );
   emit();
 }
+
+// Quita una etiqueta de todos los contactos que la tengan (usado cuando se
+// elimina la etiqueta por completo desde CRM > Etiquetas).
+export function removeTagFromAllContactos(tag: string) {
+  registros = registros.map((r) =>
+    r.tags.includes(tag) ? { ...r, tags: r.tags.filter((t) => t !== tag) } : r
+  );
+  emit();
+}
+
+// Snapshot no-reactivo de los contactos actuales.
+export function getContactos() {
+  return registros;
+}
