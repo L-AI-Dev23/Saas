@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { Button } from "@/components/animate-ui/components/buttons/button";
 import { conversaciones, mensajesPorConversacion } from "@/lib/mock-data";
 import { TextArea } from "@/components/base/textarea/textarea";
 import {
@@ -103,8 +104,8 @@ export default function InboxPage() {
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
                   filtroActivo === f.label
-                    ? "bg-dashboard-active text-dashboard-topbar"
-                    : "bg-surface text-text-secondary hover:bg-border"
+                    ? "bg-text-primary text-white"
+                    : "bg-surface text-text-primary hover:bg-border"
                 )}
               >
                 {f.label}
@@ -169,12 +170,12 @@ export default function InboxPage() {
             </p>
           </div>
           {activa.estado === "esperando_humano" ? (
-            <button
+            <Button
               onClick={tomarConversacion}
-              className="rounded-lg bg-cta px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cta-hover"
+              className="rounded-lg bg-cta text-white hover:bg-cta-hover"
             >
               Tomar conversación
-            </button>
+            </Button>
           ) : (
             <span className="text-xs font-medium text-text-muted">
               {estadoLabel[activa.estado]}
