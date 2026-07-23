@@ -55,11 +55,33 @@ export const conversaciones = [
   { id: 5, nombre: "Jorge Paredes", canal: "messenger", estado: "esperando_humano", ultimo: "¿Hacen envíos a Arequipa?", tiempo: "Ayer" },
 ];
 
-export const mensajesConversacion1 = [
-  { id: 1, from: "contact", texto: "Hola! vi el anuncio del curso", hora: "10:38" },
-  { id: 2, from: "bot", texto: "¡Hola Luis! Sí, tenemos el curso disponible 🙌 ¿quieres que te cuente los detalles?", hora: "10:39" },
-  { id: 3, from: "contact", texto: "¿Tienen el curso disponible en cuotas?", hora: "10:42" },
-];
+export const mensajesPorConversacion: Record<number, { id: number; from: "contact" | "bot" | "agent"; texto: string; hora: string }[]> = {
+  1: [
+    { id: 1, from: "contact", texto: "Hola! vi el anuncio del curso", hora: "10:38" },
+    { id: 2, from: "bot", texto: "¡Hola Luis! Sí, tenemos el curso disponible 🙌 ¿quieres que te cuente los detalles?", hora: "10:39" },
+    { id: 3, from: "contact", texto: "¿Tienen el curso disponible en cuotas?", hora: "10:42" },
+  ],
+  2: [
+    { id: 1, from: "contact", texto: "Hola, quiero info del curso de Excel", hora: "10:15" },
+    { id: 2, from: "bot", texto: "¡Hola Andrea! Claro, el curso de Excel Avanzado dura 6 semanas y cuesta S/ 350. ¿Te comparto el temario?", hora: "10:16" },
+    { id: 3, from: "contact", texto: "El bot está respondiendo automáticamente", hora: "10:20" },
+  ],
+  3: [
+    { id: 1, from: "contact", texto: "Buenas, necesitamos cotización para 20 personas", hora: "09:40" },
+    { id: 2, from: "agent", texto: "¡Hola! Con gusto, para grupos de 20+ el precio es S/ 280 por persona con certificado incluido.", hora: "09:52" },
+    { id: 3, from: "contact", texto: "Perfecto, gracias por la info 🙌", hora: "09:58" },
+  ],
+  4: [
+    { id: 1, from: "contact", texto: "Hola, quiero comprar el curso de Excel", hora: "Ayer 16:02" },
+    { id: 2, from: "agent", texto: "¡Genial! Te comparto el link de pago: wa.me/pago-curso-excel", hora: "Ayer 16:05" },
+    { id: 3, from: "contact", texto: "Listo, ya hice el pedido", hora: "Ayer 16:10" },
+  ],
+  5: [
+    { id: 1, from: "contact", texto: "Hola, ¿tienen el curso de Excel?", hora: "Ayer 14:20" },
+    { id: 2, from: "bot", texto: "¡Hola Jorge! Sí, está disponible. ¿Quieres que te pase los detalles?", hora: "Ayer 14:21" },
+    { id: 3, from: "contact", texto: "¿Hacen envíos a Arequipa?", hora: "Ayer 14:30" },
+  ],
+};
 
 // ---------- Email ----------
 export const emailKpis = [

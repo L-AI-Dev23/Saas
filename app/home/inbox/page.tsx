@@ -1,7 +1,10 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { conversaciones, mensajesConversacion1 } from "@/lib/mock-data";
+import { conversaciones, mensajesPorConversacion } from "@/lib/mock-data";
 import { TextArea } from "@/components/base/textarea/textarea";
 import {
   WhatsappLogo,
@@ -10,11 +13,11 @@ import {
   FacebookLogo,
 } from "@phosphor-icons/react/dist/ssr";
 
-const canalIcon: Record<string, { icon: typeof InstagramLogo; color: string }> = {
-  instagram: { icon: InstagramLogo, color: "#DD2A7B" },
-  messenger: { icon: FacebookLogo, color: "#0084FF" },
-  tiktok: { icon: TelegramLogo, color: "#000000" },
-  whatsapp: { icon: WhatsappLogo, color: "#25D366" },
+const canalIcon: Record<string, { icon: typeof InstagramLogo; color: string; label: string }> = {
+  instagram: { icon: InstagramLogo, color: "#DD2A7B", label: "Instagram" },
+  messenger: { icon: FacebookLogo, color: "#0084FF", label: "Messenger" },
+  tiktok: { icon: TelegramLogo, color: "#000000", label: "TikTok" },
+  whatsapp: { icon: WhatsappLogo, color: "#25D366", label: "WhatsApp" },
 };
 
 const estadoLabel: Record<string, string> = {
@@ -25,7 +28,35 @@ const estadoLabel: Record<string, string> = {
 };
 
 export default function InboxPage() {
-  const activa = conversaciones[0];
+  const [selectedId, setSelectedId] = useState(conversaciones[0].id);
+  const [borrador, setBorrador] = useState("");
+  // Mensajes editables en memoria: partimos del mock y agregamos lo que el
+  // usuario envía. Esto es solo local -- sin backend, se pierde al refrescar.
+  const [mensajesPorConv, setMensajesPorConv] = useState(mensajesPorConversacion);
+
+  const activa = conversaciones.find((c) => c.id === selectedId) ?? conversaciones[0];
+  const mensajes = mensajesPorConv[activa.id] ?? [];
+  const CanalActivo = canalIcon[activa.canal];
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [mensajes.length, activa.id]);
+
+  function enviarMensaje() {
+    const texto = borrador.trim();
+    if (!texto) return;
+    const hora = new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+    setMensajesPorConv((prev) => {
+      const hilo = prev[activa.id] ?? [];
+      return {
+        ...prev,
+        [activa.id]: [...hilo, { id: hilo.length + 1, from: "agent" as const, texto, hora }],
+      };
+    });
+    setBorrador("");
+  }
+
   return (
     <div className="-m-6 flex h-[calc(100vh-4rem)] overflow-hidden lg:-m-8">
       {/* Lista de conversaciones */}
@@ -49,12 +80,15 @@ export default function InboxPage() {
         <div className="flex-1 overflow-y-auto">
           {conversaciones.map((c) => {
             const Canal = canalIcon[c.canal];
+            const esActiva = c.id === activa.id;
             return (
               <button
                 key={c.id}
+                onClick={() => setSelectedId(c.id)}
+                aria-current={esActiva ? "true" : undefined}
                 className={cn(
                   "flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left hover:bg-surface",
-                  c.id === activa.id && "bg-surface"
+                  esActiva && "bg-surface"
                 )}
               >
                 <div className="relative shrink-0">
@@ -89,7 +123,9 @@ export default function InboxPage() {
         <div className="flex items-center justify-between border-b border-border bg-white px-6 py-4">
           <div>
             <p className="text-sm font-semibold text-text-primary">{activa.nombre}</p>
-            <p className="text-xs text-text-secondary">Instagram · esperando atención humana</p>
+            <p className="text-xs text-text-secondary">
+              {CanalActivo.label} · {estadoLabel[activa.estado]}
+            </p>
           </div>
           <button className="rounded-lg bg-cta px-4 py-2 text-sm font-semibold text-white hover:bg-cta-hover">
             Tomar conversación
@@ -97,7 +133,7 @@ export default function InboxPage() {
         </div>
 
         <div className="flex-1 space-y-3 overflow-y-auto p-6">
-          {mensajesConversacion1.map((m) => (
+          {mensajes.map((m) => (
             <div key={m.id} className={cn("flex", m.from === "contact" ? "justify-start" : "justify-end")}>
               <div
                 className={cn(
@@ -114,17 +150,31 @@ export default function InboxPage() {
               </div>
             </div>
           ))}
+          <div ref={bottomRef} />
         </div>
 
-        <div className="flex items-center gap-3 border-t border-border bg-white p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            enviarMensaje();
+          }}
+          className="flex items-center gap-3 border-t border-border bg-white p-4"
+        >
           <input
+            value={borrador}
+            onChange={(e) => setBorrador(e.target.value)}
             placeholder="Escribe una respuesta…"
+            aria-label="Escribe una respuesta"
             className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-cta"
           />
-          <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cta text-white hover:bg-cta-hover">
+          <button
+            type="submit"
+            disabled={!borrador.trim()}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cta text-white hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
             <Send size={16} />
           </button>
-        </div>
+        </form>
       </div>
 
       {/* Panel de contacto */}
@@ -134,7 +184,7 @@ export default function InboxPage() {
             {activa.nombre.charAt(0)}
           </div>
           <p className="mt-3 text-sm font-semibold text-text-primary">{activa.nombre}</p>
-          <p className="text-xs text-text-secondary">Origen: chatbot</p>
+          <p className="text-xs text-text-secondary">Origen: {CanalActivo.label}</p>
         </div>
 
         <div className="mt-6">
