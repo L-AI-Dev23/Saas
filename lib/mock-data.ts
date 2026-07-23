@@ -115,10 +115,38 @@ export const emailListas = [
 ];
 
 export const emailPlantillas = [
-  { id: 1, nombre: "Bienvenida", editado: "hace 3 días" },
-  { id: 2, nombre: "Carrito abandonado", editado: "hace 1 semana" },
-  { id: 3, nombre: "Newsletter mensual", editado: "hace 2 semanas" },
-  { id: 4, nombre: "Agradecimiento post-compra", editado: "hace 1 mes" },
+  {
+    id: 1,
+    nombre: "Bienvenida",
+    editado: "hace 3 días",
+    asunto: "¡Bienvenido a Codew! 🎉",
+    cuerpo:
+      "Hola {{nombre}},\n\nGracias por sumarte. En los próximos días te vamos a compartir contenido para que saques el máximo provecho de tu cuenta.\n\nCualquier duda, respondé este correo.\n\nSaludos,\nEl equipo",
+  },
+  {
+    id: 2,
+    nombre: "Carrito abandonado",
+    editado: "hace 1 semana",
+    asunto: "Dejaste algo en tu carrito",
+    cuerpo:
+      "Hola {{nombre}},\n\nNotamos que dejaste productos en tu carrito. Todavía están disponibles, ¡completá tu compra antes de que se agoten!\n\n{{link_carrito}}\n\nSaludos,\nEl equipo",
+  },
+  {
+    id: 3,
+    nombre: "Newsletter mensual",
+    editado: "hace 2 semanas",
+    asunto: "Lo mejor del mes en Codew",
+    cuerpo:
+      "Hola {{nombre}},\n\nAcá va un resumen de las novedades del mes: nuevos productos, tips y ofertas exclusivas para vos.\n\nSaludos,\nEl equipo",
+  },
+  {
+    id: 4,
+    nombre: "Agradecimiento post-compra",
+    editado: "hace 1 mes",
+    asunto: "¡Gracias por tu compra!",
+    cuerpo:
+      "Hola {{nombre}},\n\nQueremos agradecerte por confiar en nosotros. Tu pedido ya está en proceso, te avisaremos cuando esté en camino.\n\nSaludos,\nEl equipo",
+  },
 ];
 
 export const emailAutomatizaciones = [
