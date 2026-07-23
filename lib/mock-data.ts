@@ -1,5 +1,24 @@
 // Datos de muestra — todo estático, solo para maquetar la UI (sin conexión a Supabase todavía).
 
+import { subDays, format } from "date-fns";
+import { es } from "date-fns/locale";
+
+// Serie de 30 días con fechas reales (relativas a hoy) para el gráfico de contactos nuevos.
+// Cuando se conecte a Supabase, esto se reemplaza por un query agregado por día.
+const contactosPorDiaValores = [
+  14, 22, 18, 30, 26, 34, 28, 40, 33, 45, 38, 52, 41, 47, 55, 49, 60, 58, 63,
+  57, 66, 61, 70, 68, 75, 72, 80, 77, 85, 90,
+];
+
+export const contactosNuevosPorDia = contactosPorDiaValores.map((valor, i) => {
+  const fecha = subDays(new Date(), contactosPorDiaValores.length - 1 - i);
+  return {
+    fecha: format(fecha, "yyyy-MM-dd"),
+    fechaCorta: format(fecha, "d MMM", { locale: es }),
+    contactos: valor,
+  };
+});
+
 export const kpisDashboard = [
   { label: "Leads nuevos (7 días)", value: "128", delta: "+18%" },
   { label: "Mensajes respondidos", value: "946", delta: "+6%" },
@@ -7,20 +26,24 @@ export const kpisDashboard = [
   { label: "Campañas activas", value: "5", delta: "0%" },
 ];
 
+// Nota: por ahora cada item enlaza a la vista del módulo, no a la entidad exacta
+// (lead/conversación/campaña puntual), porque el mock no tiene IDs reales.
+// Cuando esto venga de Supabase, cada fila debería traer su propio id y el href
+// apuntar directo al recurso, ej. `/home/crm/contactos/${leadId}`.
 export const actividadReciente = [
-  { modulo: "Chatbots", texto: "El bot “Bienvenida IG” capturó un nuevo lead", tiempo: "hace 4 min" },
-  { modulo: "Email", texto: "Campaña “Verano 2026” fue enviada a 1,204 contactos", tiempo: "hace 32 min" },
-  { modulo: "CRM", texto: "María Fernández pasó a la etapa “Cliente”", tiempo: "hace 1 h" },
-  { modulo: "Automatizaciones", texto: "“Recordatorio de carrito abandonado” se ejecutó 14 veces", tiempo: "hace 2 h" },
-  { modulo: "Catálogo", texto: "El producto “Curso de Excel Avanzado” alcanzó 300 vistas", tiempo: "hace 3 h" },
-  { modulo: "Inbox", texto: "Nueva conversación esperando atención humana", tiempo: "hace 5 h" },
+  { modulo: "Chatbots", texto: "El bot “Bienvenida IG” capturó un nuevo lead", tiempo: "hace 4 min", href: "/home/crm/contactos" },
+  { modulo: "Email", texto: "Campaña “Verano 2026” fue enviada a 1,204 contactos", tiempo: "hace 32 min", href: "/home/email/campanas" },
+  { modulo: "CRM", texto: "María Fernández pasó a la etapa “Cliente”", tiempo: "hace 1 h", href: "/home/crm/contactos" },
+  { modulo: "Automatizaciones", texto: "“Recordatorio de carrito abandonado” se ejecutó 14 veces", tiempo: "hace 2 h", href: "/home/automatizaciones/activas" },
+  { modulo: "Catálogo", texto: "El producto “Curso de Excel Avanzado” alcanzó 300 vistas", tiempo: "hace 3 h", href: "/home/catalogo/productos" },
+  { modulo: "Inbox", texto: "Nueva conversación esperando atención humana", tiempo: "hace 5 h", href: "/home/inbox" },
 ];
 
 export const onboardingSteps = [
-  { step: "connect_account", label: "Conecta tu primera cuenta (Instagram, Messenger o TikTok)", done: true },
-  { step: "activate_chatbot", label: "Activa tu primer chatbot desde una plantilla", done: true },
-  { step: "add_product", label: "Agrega tu primer producto al catálogo", done: false },
-  { step: "first_campaign", label: "Lanza tu primera campaña", done: false },
+  { step: "connect_account", label: "Conecta tu primera cuenta (Instagram, Messenger o TikTok)", done: true, href: "/home/configuracion" },
+  { step: "activate_chatbot", label: "Activa tu primer chatbot desde una plantilla", done: true, href: "/home/chatbots/plantillas" },
+  { step: "add_product", label: "Agrega tu primer producto al catálogo", done: false, href: "/home/catalogo/productos" },
+  { step: "first_campaign", label: "Lanza tu primera campaña", done: false, href: "/home/email/campanas" },
 ];
 
 // ---------- Inbox ----------

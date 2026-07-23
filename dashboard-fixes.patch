@@ -1,0 +1,285 @@
+--- a/app/home/page.tsx	2026-07-22 09:46:12.000000000 +0000
++++ b/app/home/page.tsx	2026-07-23 05:51:39.708839519 +0000
+@@ -1,11 +1,26 @@
++"use client";
++
++import { useState } from "react";
+ import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
+ import Link from "next/link";
+ import { PageHeader } from "@/components/dashboard/PageHeader";
+ import { KpiRow } from "@/components/dashboard/KpiCard";
+-import { kpisDashboard, actividadReciente, onboardingSteps } from "@/lib/mock-data";
++import { ContactsChart } from "@/components/dashboard/ContactsChart";
++import { kpisDashboard, actividadReciente, onboardingSteps, contactosNuevosPorDia } from "@/lib/mock-data";
++
++const RANGOS = [
++  { label: "7 días", dias: 7 },
++  { label: "30 días", dias: 30 },
++  { label: "90 días", dias: 90 },
++] as const;
+ 
+ export default function HomePage() {
+   const pendientes = onboardingSteps.filter((s) => !s.done);
++  const [rangoDias, setRangoDias] = useState(30);
++
++  // Nota: el mock solo tiene 30 días de datos. Con datos reales de Supabase,
++  // "90 días" haría un query distinto en vez de solo recortar el array.
++  const datosChart = contactosNuevosPorDia.slice(-Math.min(rangoDias, contactosNuevosPorDia.length));
+ 
+   return (
+     <div className="mx-auto max-w-6xl">
+@@ -25,27 +40,27 @@
+             </span>
+           </div>
+           <div className="flex flex-col gap-2">
+-            {onboardingSteps.map((step) => (
+-              <div
+-                key={step.step}
+-                className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-sg-sm"
+-              >
+-                {step.done ? (
++            {onboardingSteps.map((step) =>
++              step.done ? (
++                <div
++                  key={step.step}
++                  className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-sg-sm"
++                >
+                   <CheckCircle2 size={18} className="shrink-0 text-cta" />
+-                ) : (
+-                  <Circle size={18} className="shrink-0 text-text-muted" />
+-                )}
+-                <span
+-                  className={
+-                    step.done
+-                      ? "text-sm text-text-muted line-through"
+-                      : "text-sm font-medium text-text-primary"
+-                  }
++                  <span className="text-sm text-text-muted line-through">{step.label}</span>
++                </div>
++              ) : (
++                <Link
++                  key={step.step}
++                  href={step.href}
++                  className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-sg-sm transition-shadow hover:shadow-sg-md"
+                 >
+-                  {step.label}
+-                </span>
+-              </div>
+-            ))}
++                  <Circle size={18} className="shrink-0 text-text-muted" />
++                  <span className="text-sm font-medium text-text-primary">{step.label}</span>
++                  <ArrowRight size={16} className="ml-auto shrink-0 text-cta" />
++                </Link>
++              )
++            )}
+           </div>
+         </div>
+       )}
+@@ -54,27 +69,42 @@
+ 
+       <div className="mt-8 grid gap-4 lg:grid-cols-3">
+         <div className="rounded-lg border border-border bg-white p-6 shadow-sg-sm lg:col-span-2">
+-          <h2 className="mb-4 text-base font-semibold text-text-primary">
+-            Contactos nuevos — últimos 30 días
+-          </h2>
+-          <div className="flex h-40 items-end gap-2">
+-            {[14, 22, 18, 30, 26, 34, 28, 40, 33, 45, 38, 52].map((v, i) => (
+-              <div key={i} className="flex-1 rounded-t-md bg-cta/80" style={{ height: `${v * 1.8}px` }} />
+-            ))}
++          <div className="mb-4 flex items-center justify-between">
++            <h2 className="text-base font-semibold text-text-primary">Contactos nuevos</h2>
++            <div className="flex gap-1 rounded-md bg-background p-1">
++              {RANGOS.map((r) => (
++                <button
++                  key={r.dias}
++                  onClick={() => setRangoDias(r.dias)}
++                  className={
++                    rangoDias === r.dias
++                      ? "rounded px-2.5 py-1 text-xs font-medium bg-white text-text-primary shadow-sg-sm"
++                      : "rounded px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
++                  }
++                >
++                  {r.label}
++                </button>
++              ))}
++            </div>
+           </div>
+-          <p className="mt-3 text-xs text-text-muted">Semana 1 → Semana 12 (vista simplificada)</p>
++          <ContactsChart data={datosChart} />
+         </div>
+ 
+         <div className="rounded-lg border border-border bg-white p-6 shadow-sg-sm">
+           <div className="mb-4 flex items-center justify-between">
+             <h2 className="text-base font-semibold text-text-primary">Actividad reciente</h2>
+           </div>
+-          <ul className="flex flex-col gap-4">
++          <ul className="flex flex-col gap-1">
+             {actividadReciente.map((item, i) => (
+-              <li key={i} className="flex flex-col gap-0.5 border-l-2 border-border pl-3">
+-                <span className="text-xs font-semibold text-cta">{item.modulo}</span>
+-                <span className="text-sm text-text-primary">{item.texto}</span>
+-                <span className="text-xs text-text-muted">{item.tiempo}</span>
++              <li key={i}>
++                <Link
++                  href={item.href}
++                  className="flex flex-col gap-0.5 rounded-md border-l-2 border-border py-1.5 pl-3 pr-2 transition-colors hover:border-cta hover:bg-background"
++                >
++                  <span className="text-xs font-semibold text-cta">{item.modulo}</span>
++                  <span className="text-sm text-text-primary">{item.texto}</span>
++                  <span className="text-xs text-text-muted">{item.tiempo}</span>
++                </Link>
+               </li>
+             ))}
+           </ul>
+--- a/lib/mock-data.ts	2026-07-22 09:46:12.000000000 +0000
++++ b/lib/mock-data.ts	2026-07-23 05:51:34.372950148 +0000
+@@ -1,5 +1,24 @@
+ // Datos de muestra — todo estático, solo para maquetar la UI (sin conexión a Supabase todavía).
+ 
++import { subDays, format } from "date-fns";
++import { es } from "date-fns/locale";
++
++// Serie de 30 días con fechas reales (relativas a hoy) para el gráfico de contactos nuevos.
++// Cuando se conecte a Supabase, esto se reemplaza por un query agregado por día.
++const contactosPorDiaValores = [
++  14, 22, 18, 30, 26, 34, 28, 40, 33, 45, 38, 52, 41, 47, 55, 49, 60, 58, 63,
++  57, 66, 61, 70, 68, 75, 72, 80, 77, 85, 90,
++];
++
++export const contactosNuevosPorDia = contactosPorDiaValores.map((valor, i) => {
++  const fecha = subDays(new Date(), contactosPorDiaValores.length - 1 - i);
++  return {
++    fecha: format(fecha, "yyyy-MM-dd"),
++    fechaCorta: format(fecha, "d MMM", { locale: es }),
++    contactos: valor,
++  };
++});
++
+ export const kpisDashboard = [
+   { label: "Leads nuevos (7 días)", value: "128", delta: "+18%" },
+   { label: "Mensajes respondidos", value: "946", delta: "+6%" },
+@@ -7,20 +26,24 @@
+   { label: "Campañas activas", value: "5", delta: "0%" },
+ ];
+ 
++// Nota: por ahora cada item enlaza a la vista del módulo, no a la entidad exacta
++// (lead/conversación/campaña puntual), porque el mock no tiene IDs reales.
++// Cuando esto venga de Supabase, cada fila debería traer su propio id y el href
++// apuntar directo al recurso, ej. `/home/crm/contactos/${leadId}`.
+ export const actividadReciente = [
+-  { modulo: "Chatbots", texto: "El bot “Bienvenida IG” capturó un nuevo lead", tiempo: "hace 4 min" },
+-  { modulo: "Email", texto: "Campaña “Verano 2026” fue enviada a 1,204 contactos", tiempo: "hace 32 min" },
+-  { modulo: "CRM", texto: "María Fernández pasó a la etapa “Cliente”", tiempo: "hace 1 h" },
+-  { modulo: "Automatizaciones", texto: "“Recordatorio de carrito abandonado” se ejecutó 14 veces", tiempo: "hace 2 h" },
+-  { modulo: "Catálogo", texto: "El producto “Curso de Excel Avanzado” alcanzó 300 vistas", tiempo: "hace 3 h" },
+-  { modulo: "Inbox", texto: "Nueva conversación esperando atención humana", tiempo: "hace 5 h" },
++  { modulo: "Chatbots", texto: "El bot “Bienvenida IG” capturó un nuevo lead", tiempo: "hace 4 min", href: "/home/crm/contactos" },
++  { modulo: "Email", texto: "Campaña “Verano 2026” fue enviada a 1,204 contactos", tiempo: "hace 32 min", href: "/home/email/campanas" },
++  { modulo: "CRM", texto: "María Fernández pasó a la etapa “Cliente”", tiempo: "hace 1 h", href: "/home/crm/contactos" },
++  { modulo: "Automatizaciones", texto: "“Recordatorio de carrito abandonado” se ejecutó 14 veces", tiempo: "hace 2 h", href: "/home/automatizaciones/activas" },
++  { modulo: "Catálogo", texto: "El producto “Curso de Excel Avanzado” alcanzó 300 vistas", tiempo: "hace 3 h", href: "/home/catalogo/productos" },
++  { modulo: "Inbox", texto: "Nueva conversación esperando atención humana", tiempo: "hace 5 h", href: "/home/inbox" },
+ ];
+ 
+ export const onboardingSteps = [
+-  { step: "connect_account", label: "Conecta tu primera cuenta (Instagram, Messenger o TikTok)", done: true },
+-  { step: "activate_chatbot", label: "Activa tu primer chatbot desde una plantilla", done: true },
+-  { step: "add_product", label: "Agrega tu primer producto al catálogo", done: false },
+-  { step: "first_campaign", label: "Lanza tu primera campaña", done: false },
++  { step: "connect_account", label: "Conecta tu primera cuenta (Instagram, Messenger o TikTok)", done: true, href: "/home/configuracion" },
++  { step: "activate_chatbot", label: "Activa tu primer chatbot desde una plantilla", done: true, href: "/home/chatbots/plantillas" },
++  { step: "add_product", label: "Agrega tu primer producto al catálogo", done: false, href: "/home/catalogo/productos" },
++  { step: "first_campaign", label: "Lanza tu primera campaña", done: false, href: "/home/email/campanas" },
+ ];
+ 
+ // ---------- Inbox ----------
+--- a/package.json	2026-07-22 10:16:40.000000000 +0000
++++ b/package.json	2026-07-23 05:45:04.071555294 +0000
+@@ -34,6 +34,7 @@
+     "react-aria-components": "^1.19.0",
+     "react-day-picker": "^10.0.1",
+     "react-dom": "19.2.4",
++    "recharts": "^2.15.0",
+     "shadcn": "^4.11.0",
+     "tailwind-merge": "^3.6.0",
+     "tailwindcss-animate": "^1.0.7",
+--- /dev/null	2026-07-22 17:13:53.797095788 +0000
++++ b/components/dashboard/ContactsChart.tsx	2026-07-23 05:45:32.188751849 +0000
+@@ -0,0 +1,77 @@
++"use client";
++
++import {
++  AreaChart,
++  Area,
++  XAxis,
++  YAxis,
++  Tooltip,
++  ResponsiveContainer,
++  CartesianGrid,
++} from "recharts";
++
++type ContactPoint = {
++  fecha: string;
++  fechaCorta: string;
++  contactos: number;
++};
++
++function ChartTooltip({
++  active,
++  payload,
++}: {
++  active?: boolean;
++  payload?: { payload: ContactPoint }[];
++}) {
++  if (!active || !payload?.length) return null;
++  const point = payload[0].payload;
++  return (
++    <div className="rounded-md border border-border bg-white px-3 py-2 shadow-sg-md">
++      <p className="text-xs font-medium text-text-secondary">{point.fechaCorta}</p>
++      <p className="text-sm font-semibold text-text-primary">
++        {point.contactos} contactos nuevos
++      </p>
++    </div>
++  );
++}
++
++export function ContactsChart({ data }: { data: ContactPoint[] }) {
++  return (
++    <div className="h-56 w-full" role="img" aria-label={`Gráfico de contactos nuevos por día, del ${data[0]?.fechaCorta} al ${data[data.length - 1]?.fechaCorta}`}>
++      <ResponsiveContainer width="100%" height="100%">
++        <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
++          <defs>
++            <linearGradient id="contactosGradient" x1="0" y1="0" x2="0" y2="1">
++              <stop offset="0%" stopColor="var(--color-cta, #18181b)" stopOpacity={0.35} />
++              <stop offset="100%" stopColor="var(--color-cta, #18181b)" stopOpacity={0} />
++            </linearGradient>
++          </defs>
++          <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
++          <XAxis
++            dataKey="fechaCorta"
++            tickLine={false}
++            axisLine={false}
++            tick={{ fontSize: 11, fill: "#8a94a6" }}
++            interval={4}
++            minTickGap={20}
++          />
++          <YAxis
++            tickLine={false}
++            axisLine={false}
++            tick={{ fontSize: 11, fill: "#8a94a6" }}
++            width={36}
++          />
++          <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }} />
++          <Area
++            type="monotone"
++            dataKey="contactos"
++            stroke="var(--color-cta, #18181b)"
++            strokeWidth={2}
++            fill="url(#contactosGradient)"
++            activeDot={{ r: 4 }}
++          />
++        </AreaChart>
++      </ResponsiveContainer>
++    </div>
++  );
++}
