@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Megaphone, Trash2, MessageSquare, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Megaphone, Trash2, MessageSquare, AlertCircle } from "lucide-react";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +14,12 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/animate-ui/components/radix/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/animate-ui/components/radix/sheet";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { CampaignBotsChart } from "@/components/dashboard/CampaignBotsChart";
 import { chatbotCampanas, chatbotsActivos } from "@/lib/mock-data";
 import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { Tabs, TabList } from "@/components/application/tabs/tabs";
-import { cn } from "@/lib/utils";
 
 type Campana = (typeof chatbotCampanas)[number];
 
@@ -93,6 +91,88 @@ export default function ChatbotCampanasPage() {
   const chartData = botsDeSeleccionada
     .map((b) => ({ nombre: b.nombre, mensajes: b.mensajes }))
     .sort((a, b) => b.mensajes - a.mensajes);
+
+  if (seleccionada) {
+    const otrasBots = botsDeSeleccionada.map((b) => ({
+      bot: b,
+      otras: campanasDeBot(b.id, campanas, seleccionada.id),
+    }));
+
+    return (
+      <div className="mx-auto max-w-6xl">
+        <button
+          onClick={() => setSeleccionada(null)}
+          className="mb-6 flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-text-primary"
+        >
+          <ArrowLeft size={16} /> Volver a campañas
+        </button>
+
+        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+              <Megaphone size={20} />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold text-text-primary">{seleccionada.nombre}</h1>
+                <StatusBadge label={estadoCampana(seleccionada)} />
+              </div>
+              <p className="mt-2 text-sm text-text-secondary">
+                {formatFecha(seleccionada.inicio)} — {formatFecha(seleccionada.fin)}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            className="shrink-0 text-error hover:bg-error/5 hover:text-error"
+            onClick={() => eliminarCampana(seleccionada.id)}
+          >
+            <Trash2 size={14} /> Eliminar campaña
+          </Button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-lg border border-border bg-white p-5 sm:col-span-1">
+            <p className="text-xs font-semibold uppercase text-text-muted">Mensajes totales</p>
+            <p className="mt-1 text-3xl font-semibold text-text-primary">{totalMensajes.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-text-secondary">
+              {botsDeSeleccionada.length} {botsDeSeleccionada.length === 1 ? "bot agrupado" : "bots agrupados"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-white p-5 sm:col-span-2">
+            <p className="mb-3 text-xs font-semibold uppercase text-text-muted">Mensajes por bot</p>
+            {chartData.length > 0 ? (
+              <CampaignBotsChart data={chartData} />
+            ) : (
+              <p className="text-xs text-text-muted">Esta campaña no tiene bots agrupados.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-lg border border-border bg-white">
+          <div className="border-b border-border px-5 py-3">
+            <p className="text-xs font-semibold uppercase text-text-muted">Bots agrupados</p>
+          </div>
+          <ul className="divide-y divide-border">
+            {otrasBots.map(({ bot, otras }) => (
+              <li key={bot.id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-text-primary">{bot.nombre}</p>
+                  {otras.length > 0 && (
+                    <p className="mt-0.5 text-xs text-text-muted">
+                      También en: {otras.map((c) => c.nombre).join(", ")}
+                    </p>
+                  )}
+                </div>
+                <span className="text-sm text-text-secondary">{bot.mensajes.toLocaleString()} msj</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -258,77 +338,6 @@ export default function ChatbotCampanasPage() {
           })}
         </div>
       )}
-
-      {/* Drawer de detalle de campaña */}
-      <Sheet open={!!seleccionada} onOpenChange={(open) => !open && setSeleccionada(null)}>
-        <SheetContent side="right" className="max-w-md gap-0 p-6">
-          {seleccionada && (
-            <>
-              <SheetHeader className="mb-6 p-0">
-                <div className="flex items-center gap-2">
-                  <SheetTitle className="text-lg">{seleccionada.nombre}</SheetTitle>
-                  <StatusBadge label={estadoCampana(seleccionada)} />
-                </div>
-              </SheetHeader>
-
-              <div className="flex flex-col gap-5 text-sm">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-text-muted">Duración</p>
-                  <p className="text-text-primary">
-                    {formatFecha(seleccionada.inicio)} — {formatFecha(seleccionada.fin)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-semibold uppercase text-text-muted">Mensajes totales</p>
-                  <p className="text-2xl font-semibold text-text-primary">{totalMensajes.toLocaleString()}</p>
-                </div>
-
-                <div className="border-t border-border pt-4">
-                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Mensajes por bot</p>
-                  {chartData.length > 0 ? (
-                    <CampaignBotsChart data={chartData} />
-                  ) : (
-                    <p className="text-xs text-text-muted">Esta campaña no tiene bots agrupados.</p>
-                  )}
-                </div>
-
-                <div className="border-t border-border pt-4">
-                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Bots agrupados</p>
-                  <ul className="flex flex-col gap-2">
-                    {botsDeSeleccionada.map((b) => {
-                      const otras = campanasDeBot(b.id, campanas, seleccionada.id);
-                      return (
-                        <li key={b.id} className={cn("rounded-lg border border-border px-3 py-2")}>
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-text-primary">{b.nombre}</span>
-                            <span className="text-xs text-text-secondary">{b.mensajes.toLocaleString()} msj</span>
-                          </div>
-                          {otras.length > 0 && (
-                            <p className="mt-1 text-xs text-text-muted">
-                              También en: {otras.map((c) => c.nombre).join(", ")}
-                            </p>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-
-                <div className="border-t border-border pt-4">
-                  <Button
-                    variant="outline"
-                    className="w-full text-error hover:bg-error/5 hover:text-error"
-                    onClick={() => eliminarCampana(seleccionada.id)}
-                  >
-                    <Trash2 size={14} /> Eliminar campaña
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
