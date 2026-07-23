@@ -156,9 +156,33 @@ export const emailAutomatizaciones = [
 ];
 
 export const emailCampanas = [
-  { id: 1, nombre: "Verano 2026", lista: "Newsletter general", estado: "Enviada", fecha: "12 jul 2026" },
-  { id: 2, nombre: "Reactivación clientes inactivos", lista: "No compró en 30 días", estado: "Programada", fecha: "22 jul 2026" },
-  { id: 3, nombre: "Lanzamiento curso nuevo", lista: "Clientes VIP", estado: "Borrador", fecha: "—" },
+  {
+    id: 1,
+    nombre: "Verano 2026",
+    lista: "Newsletter general",
+    plantilla: "Newsletter mensual",
+    estado: "Enviada",
+    fecha: "12 jul 2026",
+    reporte: { enviados: 2140, aperturas: 1177, clics: 342, rebotes: 18 },
+  },
+  {
+    id: 2,
+    nombre: "Reactivación clientes inactivos",
+    lista: "No compró en 30 días",
+    plantilla: "Carrito abandonado",
+    estado: "Programada",
+    fecha: "22 jul 2026",
+    reporte: null,
+  },
+  {
+    id: 3,
+    nombre: "Lanzamiento curso nuevo",
+    lista: "Clientes VIP",
+    plantilla: "Bienvenida",
+    estado: "Borrador",
+    fecha: "—",
+    reporte: null,
+  },
 ];
 
 // ---------- Automatizaciones ----------
