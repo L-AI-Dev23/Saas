@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Table2, Kanban, Search, MoreHorizontal, Pencil, Trash2, Users, X } from "lucide-react";
+import { Plus, Table2, Kanban, Search, MoreHorizontal, Pencil, Trash2, Users, X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -27,12 +27,6 @@ import {
 } from "@/lib/contacts-store";
 import { Tabs, TabList } from "@/components/application/tabs/tabs";
 import { TextArea } from "@/components/base/textarea/textarea";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/animate-ui/components/radix/sheet";
 
 const etapas = etapasContacto;
 const origenesFiltro = ["Todos los orígenes", ...origenesContacto];
@@ -41,17 +35,13 @@ const etapasFiltro = ["Todas las etapas", ...etapas.map((e) => e.label)];
 export default function ContactosPage() {
   const contactos = useContactos();
   const [view, setView] = useState<"tabla" | "kanban">("tabla");
-  const [selected, setSelected] = useState<Contacto | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroOrigen, setFiltroOrigen] = useState(origenesFiltro[0]);
   const [filtroEtapa, setFiltroEtapa] = useState(etapasFiltro[0]);
 
-  // Campos editables del drawer de detalle.
-  const [formNombre, setFormNombre] = useState("");
-  const [formEmail, setFormEmail] = useState("");
-  const [formTelefono, setFormTelefono] = useState("");
-  const [formEtapaLabel, setFormEtapaLabel] = useState("");
+  const selected = contactos.find((c) => c.id === selectedId) ?? null;
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -65,34 +55,20 @@ export default function ContactosPage() {
     });
   }, [contactos, busqueda, filtroOrigen, filtroEtapa]);
 
-  function abrirContacto(c: Contacto) {
-    setSelected(c);
-    setFormNombre(c.nombre);
-    setFormEmail(c.email);
-    setFormTelefono(c.telefono);
-    setFormEtapaLabel(etapas.find((e) => e.key === c.etapa)?.label ?? "");
-  }
-
-  function guardarCambios() {
-    if (!selected) return;
-    const etapa = etapas.find((e) => e.label === formEtapaLabel)?.key ?? selected.etapa;
-    updateContacto(selected.id, {
-      nombre: formNombre.trim() || selected.nombre,
-      email: formEmail.trim(),
-      telefono: formTelefono.trim(),
-      etapa,
-    });
-    setSelected(null);
-  }
-
   function eliminar(id: number) {
     deleteContacto(id);
-    if (selected?.id === id) setSelected(null);
+    if (selectedId === id) setSelectedId(null);
   }
 
-  const etiquetasDisponibles = selected
-    ? crmTags.map((t) => t.nombre).filter((n) => !selected.tags.includes(n))
-    : [];
+  if (selected) {
+    return (
+      <ContactoDetalle
+        contacto={selected}
+        onVolver={() => setSelectedId(null)}
+        onEliminar={() => eliminar(selected.id)}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -174,7 +150,7 @@ export default function ContactosPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtrados.map((c) => (
-                  <tr key={c.id} onClick={() => abrirContacto(c)} className="cursor-pointer hover:bg-surface">
+                  <tr key={c.id} onClick={() => setSelectedId(c.id)} className="cursor-pointer hover:bg-surface">
                     <td className="px-5 py-3 font-medium text-text-primary">{c.nombre}</td>
                     <td className="px-5 py-3 text-text-secondary">
                       {c.email}
@@ -207,7 +183,7 @@ export default function ContactosPage() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-40">
-                          <DropdownMenuItem className="cursor-pointer" onSelect={() => abrirContacto(c)}>
+                          <DropdownMenuItem className="cursor-pointer" onSelect={() => setSelectedId(c.id)}>
                             <Pencil size={14} /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -240,7 +216,7 @@ export default function ContactosPage() {
                   .map((c) => (
                     <button
                       key={c.id}
-                      onClick={() => abrirContacto(c)}
+                      onClick={() => setSelectedId(c.id)}
                       className="rounded-lg border border-border bg-white p-3 text-left shadow-sg-sm hover:shadow-sg-md"
                     >
                       <p className="text-sm font-semibold text-text-primary">{c.nombre}</p>
@@ -259,114 +235,148 @@ export default function ContactosPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Drawer de detalle / edición */}
-      <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent side="right" className="max-w-md gap-0 p-6">
-          {selected && (
-            <>
-              <SheetHeader className="mb-6 p-0">
-                <SheetTitle className="text-lg">{selected.nombre}</SheetTitle>
-              </SheetHeader>
+function ContactoDetalle({
+  contacto,
+  onVolver,
+  onEliminar,
+}: {
+  contacto: Contacto;
+  onVolver: () => void;
+  onEliminar: () => void;
+}) {
+  const [formNombre, setFormNombre] = useState(contacto.nombre);
+  const [formEmail, setFormEmail] = useState(contacto.email);
+  const [formTelefono, setFormTelefono] = useState(contacto.telefono);
+  const [formEtapaLabel, setFormEtapaLabel] = useState(
+    etapas.find((e) => e.key === contacto.etapa)?.label ?? ""
+  );
 
-              <div className="flex flex-col gap-4 text-sm">
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-xs font-semibold uppercase text-text-muted">Nombre</p>
-                  <Input value={formNombre} onChange={(e) => setFormNombre(e.target.value)} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-xs font-semibold uppercase text-text-muted">Email</p>
-                  <Input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-xs font-semibold uppercase text-text-muted">Teléfono</p>
-                  <Input value={formTelefono} onChange={(e) => setFormTelefono(e.target.value)} />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-text-muted">Etapa</p>
-                  <div className="mt-1">
-                    <SelectDropdown
-                      options={etapas.map((e) => e.label)}
-                      value={formEtapaLabel}
-                      onChange={setFormEtapaLabel}
-                    />
-                  </div>
-                </div>
-                <Button className="bg-cta text-white hover:bg-cta-hover" onClick={guardarCambios}>
-                  Guardar cambios
-                </Button>
+  const etiquetasDisponibles = crmTags.map((t) => t.nombre).filter((n) => !contacto.tags.includes(n));
 
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs font-semibold uppercase text-text-muted">Etiquetas</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {selected.tags.map((t) => (
-                      <span
+  function guardarCambios() {
+    const etapa = etapas.find((e) => e.label === formEtapaLabel)?.key ?? contacto.etapa;
+    updateContacto(contacto.id, {
+      nombre: formNombre.trim() || contacto.nombre,
+      email: formEmail.trim(),
+      telefono: formTelefono.trim(),
+      etapa,
+    });
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <button
+        onClick={onVolver}
+        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
+      >
+        <ArrowLeft size={16} /> Volver a Contactos
+      </button>
+
+      <PageHeader title={contacto.nombre} description="Detalle del contacto." />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 rounded-lg border border-border bg-white p-5 lg:col-span-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-semibold uppercase text-text-muted">Nombre</p>
+              <Input value={formNombre} onChange={(e) => setFormNombre(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-semibold uppercase text-text-muted">Etapa</p>
+              <SelectDropdown options={etapas.map((e) => e.label)} value={formEtapaLabel} onChange={setFormEtapaLabel} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-semibold uppercase text-text-muted">Email</p>
+              <Input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-semibold uppercase text-text-muted">Teléfono</p>
+              <Input value={formTelefono} onChange={(e) => setFormTelefono(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Button className="bg-cta text-white hover:bg-cta-hover" onClick={guardarCambios}>
+              Guardar cambios
+            </Button>
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Etiquetas</p>
+            <div className="flex flex-wrap gap-1.5">
+              {contacto.tags.map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text-secondary"
+                >
+                  {t}
+                  <button
+                    onClick={() => removeTagFromContacto(contacto.id, t)}
+                    aria-label={`Quitar etiqueta ${t}`}
+                    className="text-text-muted hover:text-error"
+                  >
+                    <X size={11} />
+                  </button>
+                </span>
+              ))}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-muted hover:border-cta hover:text-cta">
+                    + Agregar
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {etiquetasDisponibles.length === 0 ? (
+                    <DropdownMenuItem disabled>No hay más etiquetas</DropdownMenuItem>
+                  ) : (
+                    etiquetasDisponibles.map((t) => (
+                      <DropdownMenuItem
                         key={t}
-                        className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text-secondary"
+                        className="cursor-pointer"
+                        onSelect={() => addTagToContacto(contacto.id, t)}
                       >
                         {t}
-                        <button
-                          onClick={() => removeTagFromContacto(selected.id, t)}
-                          aria-label={`Quitar etiqueta ${t}`}
-                          className="text-text-muted hover:text-error"
-                        >
-                          <X size={11} />
-                        </button>
-                      </span>
-                    ))}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-muted hover:border-cta hover:text-cta">
-                          + Agregar
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
-                        {etiquetasDisponibles.length === 0 ? (
-                          <DropdownMenuItem disabled>No hay más etiquetas</DropdownMenuItem>
-                        ) : (
-                          etiquetasDisponibles.map((t) => (
-                            <DropdownMenuItem
-                              key={t}
-                              className="cursor-pointer"
-                              onSelect={() => addTagToContacto(selected.id, t)}
-                            >
-                              {t}
-                            </DropdownMenuItem>
-                          ))
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
-                <div className="border-t border-border pt-4">
-                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Timeline de interacciones</p>
-                  <ul className="flex flex-col gap-2 text-xs text-text-secondary">
-                    <li>· Contactado por Instagram — hace 3 días</li>
-                    <li>· Nota agregada por Fabiana Q. — hace 2 días</li>
-                    <li>· Pasó a etapa &quot;{etapas.find((e) => e.key === selected.etapa)?.label}&quot; — hace 1 día</li>
-                  </ul>
-                </div>
+          <div className="border-t border-border pt-4">
+            <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Nota rápida</p>
+            <TextArea rows={3} placeholder="Escribe una nota…" aria-label="Nota rápida" />
+            <Button className="mt-2 h-8 bg-cta text-xs text-white hover:bg-cta-hover">Guardar nota</Button>
+          </div>
 
-                <div className="border-t border-border pt-4">
-                  <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Nota rápida</p>
-                  <TextArea rows={3} placeholder="Escribe una nota…" aria-label="Nota rápida" />
-                  <Button className="mt-2 h-8 bg-cta text-xs text-white hover:bg-cta-hover">Guardar nota</Button>
-                </div>
+          <div className="border-t border-border pt-4">
+            <button
+              onClick={onEliminar}
+              className="flex items-center gap-1.5 text-xs font-semibold text-error hover:underline"
+            >
+              <Trash2 size={13} /> Eliminar contacto
+            </button>
+          </div>
+        </div>
 
-                <div className="border-t border-border pt-4">
-                  <button
-                    onClick={() => eliminar(selected.id)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-error hover:underline"
-                  >
-                    <Trash2 size={13} /> Eliminar contacto
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+        <div className="rounded-lg border border-border bg-white p-5">
+          <p className="mb-3 text-xs font-semibold uppercase text-text-muted">Origen</p>
+          <StatusBadge label={contacto.origen} />
+
+          <p className="mb-2 mt-5 text-xs font-semibold uppercase text-text-muted">Timeline de interacciones</p>
+          <ul className="flex flex-col gap-2 text-xs text-text-secondary">
+            <li>· Contactado por Instagram — hace 3 días</li>
+            <li>· Nota agregada por Fabiana Q. — hace 2 días</li>
+            <li>
+              · Pasó a etapa &quot;{etapas.find((e) => e.key === contacto.etapa)?.label}&quot; — hace 1 día
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
