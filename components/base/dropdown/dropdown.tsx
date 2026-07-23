@@ -48,7 +48,7 @@ const DropdownItem = ({ label, children, addon, icon: Icon, avatarUrl, unstyled,
                 return (
                     <Check
                         aria-hidden="true"
-                        className={cx("size-4 shrink-0 stroke-[2.25px] text-fg-brand-primary", !state.isSelected && "invisible", state.className)}
+                        className={cx("size-4 shrink-0 stroke-[2.25px] text-text-primary", !state.isSelected && "invisible", state.className)}
                     />
                 );
             }
@@ -145,7 +145,7 @@ const DropdownPopover = (props: DropdownPopoverProps) => {
             {...props}
             className={(state) =>
                 cx(
-                    "w-62 origin-(--trigger-anchor-point) overflow-auto rounded-lg bg-uui-primary shadow-lg ring-1 ring-secondary_alt will-change-transform",
+                    "z-[60] w-62 origin-(--trigger-anchor-point) overflow-auto rounded-lg bg-uui-primary shadow-lg ring-1 ring-secondary_alt will-change-transform",
                     state.isEntering &&
                         "duration-150 ease-out animate-in fade-in placement-right:slide-in-from-left-0.5 placement-top:slide-in-from-bottom-0.5 placement-bottom:slide-in-from-top-0.5",
                     state.isExiting &&

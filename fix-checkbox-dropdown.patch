@@ -1,0 +1,35 @@
+diff --git a/components/animate-ui/components/radix/checkbox.tsx b/components/animate-ui/components/radix/checkbox.tsx
+index 6ddeb4f..e20e336 100644
+--- a/components/animate-ui/components/radix/checkbox.tsx
++++ b/components/animate-ui/components/radix/checkbox.tsx
+@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
+ import { cva, type VariantProps } from 'class-variance-authority';
+ 
+ const checkboxVariants = cva(
+-  'peer shrink-0 flex items-center justify-center outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-500 focus-visible:ring-offset-2 [&[data-state=checked],&[data-state=indeterminate]]:bg-primary [&[data-state=checked],&[data-state=indeterminate]]:text-primary-foreground',
++  'peer shrink-0 flex items-center justify-center outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-500 [&[data-state=checked],&[data-state=indeterminate]]:bg-black [&[data-state=checked],&[data-state=indeterminate]]:border-black [&[data-state=checked],&[data-state=indeterminate]]:text-white focus-visible:ring-offset-2',
+   {
+     variants: {
+       variant: {
+diff --git a/components/base/dropdown/dropdown.tsx b/components/base/dropdown/dropdown.tsx
+index 4a32198..db03e65 100644
+--- a/components/base/dropdown/dropdown.tsx
++++ b/components/base/dropdown/dropdown.tsx
+@@ -48,7 +48,7 @@ const DropdownItem = ({ label, children, addon, icon: Icon, avatarUrl, unstyled,
+                 return (
+                     <Check
+                         aria-hidden="true"
+-                        className={cx("size-4 shrink-0 stroke-[2.25px] text-fg-brand-primary", !state.isSelected && "invisible", state.className)}
++                        className={cx("size-4 shrink-0 stroke-[2.25px] text-text-primary", !state.isSelected && "invisible", state.className)}
+                     />
+                 );
+             }
+@@ -145,7 +145,7 @@ const DropdownPopover = (props: DropdownPopoverProps) => {
+             {...props}
+             className={(state) =>
+                 cx(
+-                    "w-62 origin-(--trigger-anchor-point) overflow-auto rounded-lg bg-uui-primary shadow-lg ring-1 ring-secondary_alt will-change-transform",
++                    "z-[60] w-62 origin-(--trigger-anchor-point) overflow-auto rounded-lg bg-uui-primary shadow-lg ring-1 ring-secondary_alt will-change-transform",
+                     state.isEntering &&
+                         "duration-150 ease-out animate-in fade-in placement-right:slide-in-from-left-0.5 placement-top:slide-in-from-bottom-0.5 placement-bottom:slide-in-from-top-0.5",
+                     state.isExiting &&
