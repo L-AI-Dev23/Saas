@@ -7,21 +7,26 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { KpiRow } from "@/components/dashboard/KpiCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/animate-ui/components/buttons/button";
-import { EnviosChart } from "@/components/dashboard/EnviosChart";
-import { emailKpis, emailCampanas, emailEnviosPorDia } from "@/lib/mock-data";
-
-const RANGOS = [
-  { label: "7 días", dias: 7 },
-  { label: "30 días", dias: 30 },
-  { label: "90 días", dias: 90 },
-] as const;
+import { useEmailCampanas } from "@/lib/email-campanas-store";
+import { useEmailListas } from "@/lib/email-listas-store";
+import { useEmailPlantillas } from "@/lib/email-plantillas-store";
 
 export default function EmailDashboardPage() {
-  const [rangoDias, setRangoDias] = useState(30);
+  const campanas = useEmailCampanas();
+  const listas = useEmailListas();
+  const plantillas = useEmailPlantillas();
 
-  // Nota: el mock solo tiene 30 días de datos. Con datos reales, "90 días"
-  // haría un query distinto en vez de solo recortar el array.
-  const datosChart = emailEnviosPorDia.slice(-Math.min(rangoDias, emailEnviosPorDia.length));
+  const totalContactosSuscritos = listas.reduce((sum, l) => sum + l.contactos, 0);
+  const campanasSent = campanas.filter((c) => c.estado === "Enviada");
+
+  const kpis = [
+    { label: "Enviados (total)", value: campanasSent.length > 0 ? campanasSent.length.toString() : "0", href: "#" },
+    { label: "Listas de correo", value: listas.length.toString(), href: "/home/email/listas" },
+    { label: "Contactos suscritos", value: totalContactosSuscritos.toLocaleString(), href: "/home/email/listas" },
+    { label: "Plantillas", value: plantillas.length.toString(), href: "/home/email/plantillas" },
+  ];
+
+  const recientes = campanas.slice(0, 5);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -37,35 +42,11 @@ export default function EmailDashboardPage() {
         }
       />
 
-      <KpiRow items={emailKpis} />
-
-      <div id="envios-chart" className="mt-8 flex h-[320px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm scroll-mt-24">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-text-primary">Envíos por día</h2>
-          <div className="flex gap-1 rounded-md bg-background p-1">
-            {RANGOS.map((r) => (
-              <button
-                key={r.dias}
-                onClick={() => setRangoDias(r.dias)}
-                className={
-                  rangoDias === r.dias
-                    ? "rounded px-2.5 py-1 text-xs font-medium bg-white text-text-primary shadow-sg-sm"
-                    : "rounded px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-                }
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="min-h-0 flex-1">
-          <EnviosChart data={datosChart} />
-        </div>
-      </div>
+      <KpiRow items={kpis} />
 
       <div className="mt-8">
         <h2 className="mb-4 text-base font-semibold text-text-primary">Campañas recientes</h2>
-        {emailCampanas.length === 0 ? (
+        {recientes.length === 0 ? (
           <div className="rounded-lg border border-border bg-white p-6">
             <p className="text-center text-sm text-text-muted">Todavía no enviaste ninguna campaña.</p>
           </div>
@@ -82,7 +63,7 @@ export default function EmailDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {emailCampanas.map((c) => (
+                {recientes.map((c) => (
                   <tr key={c.id} className="hover:bg-surface">
                     <td className="px-5 py-3 font-medium text-text-primary">{c.nombre}</td>
                     <td className="px-5 py-3 text-text-secondary">{c.lista}</td>
@@ -92,7 +73,7 @@ export default function EmailDashboardPage() {
                     <td className="px-5 py-3 text-text-secondary">{c.fecha}</td>
                     <td className="px-5 py-3 text-right">
                       {c.estado === "Enviada" && (
-                        <Link href="/home/email/campanas" className="text-xs font-semibold text-cta hover:underline">
+                        <Link href={`/home/email/campanas/${c.id}`} className="text-xs font-semibold text-cta hover:underline">
                           Ver reporte
                         </Link>
                       )}

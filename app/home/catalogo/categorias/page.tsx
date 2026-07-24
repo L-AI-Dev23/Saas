@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/animate-ui/components/radix/dialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SelectDropdown } from "@/components/dashboard/SelectDropdown";
-import { categorias } from "@/lib/mock-data";
 
 const SIN_PADRE = "Sin categoría padre";
 
+// TODO: Conectar a la base de datos de Supabase cuando se implemente la tabla de categorías
+const categorias: never[] = [];
+
 export default function CategoriasPage() {
   const [padre, setPadre] = useState(SIN_PADRE);
-  const opcionesPadre = [SIN_PADRE, ...categorias.map((c) => c.nombre)];
+  const opcionesPadre = [SIN_PADRE, ...categorias.map((c: any) => c.nombre)];
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -53,19 +55,36 @@ export default function CategoriasPage() {
         }
       />
 
-      <div className="divide-y divide-border rounded-lg border border-border bg-white">
-        {categorias.map((c) => (
-          <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
-            <div className="flex items-center gap-2">
-              <FolderTree size={16} className="text-text-muted" />
-              <span className={c.padre ? "ml-4 text-sm text-text-primary" : "text-sm font-medium text-text-primary"}>
-                {c.padre ? `${c.padre} / ${c.nombre}` : c.nombre}
-              </span>
+      {categorias.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
+          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-text-muted">
+            <FolderTree size={22} />
+          </span>
+          <p className="text-sm font-semibold text-text-primary">Todavía no tienes categorías</p>
+          <p className="mt-1 max-w-sm text-sm text-text-secondary">
+            Crea categorías para organizar tus productos de forma ordenada y estructurada.
+          </p>
+          <DialogTrigger asChild>
+            <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover">
+              <Plus size={16} /> Nueva categoría
+            </Button>
+          </DialogTrigger>
+        </div>
+      ) : (
+        <div className="divide-y divide-border rounded-lg border border-border bg-white">
+          {(categorias as any[]).map((c) => (
+            <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
+              <div className="flex items-center gap-2">
+                <FolderTree size={16} className="text-text-muted" />
+                <span className={c.padre ? "ml-4 text-sm text-text-primary" : "text-sm font-medium text-text-primary"}>
+                  {c.padre ? `${c.padre} / ${c.nombre}` : c.nombre}
+                </span>
+              </div>
+              <span className="text-xs text-text-muted">{c.productos} productos</span>
             </div>
-            <span className="text-xs text-text-muted">{c.productos} productos</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

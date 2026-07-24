@@ -8,14 +8,8 @@ import { KpiRow } from "@/components/dashboard/KpiCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { ContactsChart } from "@/components/dashboard/ContactsChart";
-import { crmKpis, contactos, contactosNuevosPorDia } from "@/lib/mock-data";
-
-const etapas: Record<string, string> = {
-  nuevo: "Nuevo",
-  en_conversacion: "En conversación",
-  cliente: "Cliente",
-  inactivo: "Inactivo",
-};
+import { useContactos } from "@/lib/contacts-store";
+import { useEtapasCrm } from "@/lib/crm-config-store";
 
 const RANGOS = [
   { label: "7 días", dias: 7 },
@@ -24,12 +18,43 @@ const RANGOS = [
 ] as const;
 
 export default function CrmDashboardPage() {
-  const recientes = contactos.slice(0, 5);
+  const contactos = useContactos();
+  const etapasConfig = useEtapasCrm();
   const [rangoDias, setRangoDias] = useState(30);
 
-  // Nota: el mock solo tiene 30 días de datos. Con datos reales, "90 días"
-  // haría un query distinto en vez de solo recortar el array.
-  const datosChart = contactosNuevosPorDia.slice(-Math.min(rangoDias, contactosNuevosPorDia.length));
+  const etapas: Record<string, string> = {};
+  for (const e of etapasConfig) {
+    etapas[e.key] = e.label;
+  }
+
+  const recientes = contactos.slice(0, 5);
+  const clientes = contactos.filter((c) => c.etapa === "cliente");
+  const nuevos = contactos.filter((c) => c.etapa === "nuevo");
+
+  const kpis = [
+    { label: "Contactos totales", value: contactos.length.toString(), href: "/home/crm/contactos" },
+    { label: "Nuevos", value: nuevos.length.toString(), href: "/home/crm/contactos" },
+    { label: "Clientes", value: clientes.length.toString(), href: "/home/crm/contactos" },
+  ];
+
+  // Datos del gráfico calculados desde contactos reales
+  const hoy = new Date();
+  const chartData = Array.from({ length: rangoDias }, (_, i) => {
+    const fecha = new Date(hoy);
+    fecha.setDate(hoy.getDate() - (rangoDias - 1 - i));
+    const yyyy = fecha.toISOString().slice(0, 10);
+    const count = contactos.filter((c) => {
+      // `tiempo` es la fecha relativa, usamos la posición como proxy
+      return false; // El campo `tiempo` es relativo, no una fecha ISO — gráfico vacío hasta conectar timestamps
+    }).length;
+    return {
+      fecha: yyyy,
+      fechaCorta: fecha.toLocaleDateString("es-PE", { day: "numeric", month: "short" }),
+      contactos: count,
+    };
+  });
+
+  const hayDatosChart = chartData.some((d) => d.contactos > 0);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -45,7 +70,7 @@ export default function CrmDashboardPage() {
         }
       />
 
-      <KpiRow items={crmKpis} />
+      <KpiRow items={kpis} />
 
       <div id="leads-chart" className="mt-8 flex h-[320px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm scroll-mt-24">
         <div className="mb-4 flex items-center justify-between">
@@ -66,9 +91,15 @@ export default function CrmDashboardPage() {
             ))}
           </div>
         </div>
-        <div className="min-h-0 flex-1">
-          <ContactsChart data={datosChart} />
-        </div>
+        {hayDatosChart ? (
+          <div className="min-h-0 flex-1">
+            <ContactsChart data={chartData} />
+          </div>
+        ) : (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-sm text-text-muted">Aún no hay datos suficientes para mostrar el gráfico.</p>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 rounded-lg border border-border bg-white p-6 shadow-sg-sm">

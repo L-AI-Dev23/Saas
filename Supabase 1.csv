@@ -1,0 +1,249 @@
+table_name,column_name,data_type,is_nullable,column_default
+automation_logs,id,uuid,NO,gen_random_uuid()
+automation_logs,automation_id,uuid,NO,null
+automation_logs,contact_id,uuid,YES,null
+automation_logs,triggered_at,timestamp with time zone,NO,now()
+automation_logs,status,text,NO,null
+automation_logs,error_message,text,YES,null
+automation_templates,id,uuid,NO,gen_random_uuid()
+automation_templates,name,text,NO,null
+automation_templates,description,text,YES,null
+automation_templates,default_config,jsonb,NO,'{}'::jsonb
+automations,id,uuid,NO,gen_random_uuid()
+automations,business_id,uuid,NO,null
+automations,name,text,NO,null
+automations,trigger_event,text,NO,null
+automations,action_config,jsonb,NO,'{}'::jsonb
+automations,status,text,NO,'active'::text
+automations,created_at,timestamp with time zone,NO,now()
+business_members,id,uuid,NO,gen_random_uuid()
+business_members,business_id,uuid,NO,null
+business_members,user_id,uuid,NO,null
+business_members,role,text,NO,null
+business_members,allowed_modules,ARRAY,NO,'{}'::text[]
+business_members,status,text,NO,'invited'::text
+business_members,invited_at,timestamp with time zone,NO,now()
+business_members,joined_at,timestamp with time zone,YES,null
+businesses,id,uuid,NO,gen_random_uuid()
+businesses,owner_user_id,uuid,NO,null
+businesses,name,text,NO,null
+businesses,slug,text,NO,null
+businesses,timezone,text,NO,'America/Lima'::text
+businesses,onboarding_completed_at,timestamp with time zone,YES,null
+businesses,created_at,timestamp with time zone,NO,now()
+catalog_settings,business_id,uuid,NO,null
+catalog_settings,slug,text,NO,null
+catalog_settings,custom_domain,text,YES,null
+catalog_settings,logo_url,text,YES,null
+catalog_settings,cover_image_url,text,YES,null
+catalog_settings,primary_color,text,YES,null
+catalog_settings,contact_button,text,NO,'whatsapp'::text
+catalog_settings,seo_title,text,YES,null
+catalog_settings,seo_description,text,YES,null
+catalog_settings,currency,text,NO,'PEN'::text
+categories,id,uuid,NO,gen_random_uuid()
+categories,business_id,uuid,NO,null
+categories,name,text,NO,null
+categories,parent_id,uuid,YES,null
+categories,created_at,timestamp with time zone,NO,now()
+chatbot_campaign_items,campaign_id,uuid,NO,null
+chatbot_campaign_items,chatbot_id,uuid,NO,null
+chatbot_campaigns,id,uuid,NO,gen_random_uuid()
+chatbot_campaigns,business_id,uuid,NO,null
+chatbot_campaigns,name,text,NO,null
+chatbot_campaigns,starts_at,timestamp with time zone,YES,null
+chatbot_campaigns,ends_at,timestamp with time zone,YES,null
+chatbot_campaigns,created_at,timestamp with time zone,NO,now()
+chatbot_templates,id,uuid,NO,gen_random_uuid()
+chatbot_templates,name,text,NO,null
+chatbot_templates,type,text,NO,null
+chatbot_templates,default_config,jsonb,NO,'{}'::jsonb
+chatbots,id,uuid,NO,gen_random_uuid()
+chatbots,business_id,uuid,NO,null
+chatbots,social_account_id,uuid,NO,null
+chatbots,name,text,NO,null
+chatbots,type,text,NO,null
+chatbots,typebot_id,text,YES,null
+chatbots,scope,text,NO,'general'::text
+chatbots,target_post_id,text,YES,null
+chatbots,trigger_config,jsonb,NO,'{}'::jsonb
+chatbots,comment_reply_message,text,NO,'Te enviamos un DM 🙌'::text
+chatbots,dm_message,text,NO,"'Gracias por tu interés, aquí tienes el recurso'::text"
+chatbots,product_ids,ARRAY,YES,null
+chatbots,status,text,NO,'active'::text
+chatbots,created_at,timestamp with time zone,NO,now()
+chatbots,updated_at,timestamp with time zone,NO,now()
+contact_notes,id,uuid,NO,gen_random_uuid()
+contact_notes,contact_id,uuid,NO,null
+contact_notes,author_member_id,uuid,YES,null
+contact_notes,note,text,NO,null
+contact_notes,created_at,timestamp with time zone,NO,now()
+contact_tags,contact_id,uuid,NO,null
+contact_tags,tag_id,uuid,NO,null
+contacts,id,uuid,NO,gen_random_uuid()
+contacts,business_id,uuid,NO,null
+contacts,name,text,YES,null
+contacts,email,text,YES,null
+contacts,phone,text,YES,null
+contacts,source,text,YES,null
+contacts,external_ids,jsonb,NO,'{}'::jsonb
+contacts,stage,text,NO,'nuevo'::text
+contacts,value_cents,integer,YES,null
+contacts,deleted_at,timestamp with time zone,YES,null
+contacts,created_at,timestamp with time zone,NO,now()
+contacts,updated_at,timestamp with time zone,NO,now()
+conversations,id,uuid,NO,gen_random_uuid()
+conversations,business_id,uuid,NO,null
+conversations,contact_id,uuid,NO,null
+conversations,channel,text,NO,null
+conversations,status,text,NO,'bot_activo'::text
+conversations,assigned_to,uuid,YES,null
+conversations,last_message_at,timestamp with time zone,YES,null
+conversations,created_at,timestamp with time zone,NO,now()
+crm_settings,business_id,uuid,NO,null
+crm_settings,stage_labels,jsonb,NO,"'{""nuevo"": ""Nuevo"", ""cliente"": ""Cliente"", ""inactivo"": ""Inactivo"", ""en_conversacion"": ""En conversación""}'::jsonb"
+crm_settings,show_value_field,boolean,NO,false
+email_automations,id,uuid,NO,gen_random_uuid()
+email_automations,business_id,uuid,NO,null
+email_automations,name,text,NO,null
+email_automations,trigger_event,text,NO,null
+email_automations,template_id,uuid,NO,null
+email_automations,status,text,NO,'active'::text
+email_automations,created_at,timestamp with time zone,NO,now()
+email_campaigns,id,uuid,NO,gen_random_uuid()
+email_campaigns,business_id,uuid,NO,null
+email_campaigns,name,text,NO,null
+email_campaigns,template_id,uuid,NO,null
+email_campaigns,list_id,uuid,YES,null
+email_campaigns,status,text,NO,'draft'::text
+email_campaigns,scheduled_at,timestamp with time zone,YES,null
+email_campaigns,sent_at,timestamp with time zone,YES,null
+email_campaigns,created_at,timestamp with time zone,NO,now()
+email_config,business_id,uuid,NO,null
+email_config,sender_name,text,NO,null
+email_config,sender_email,text,NO,null
+email_config,reply_to,text,YES,null
+email_config,domain,text,YES,null
+email_config,domain_status,text,NO,'none'::text
+email_events,id,uuid,NO,gen_random_uuid()
+email_events,campaign_id,uuid,NO,null
+email_events,contact_id,uuid,NO,null
+email_events,type,text,NO,null
+email_events,created_at,timestamp with time zone,NO,now()
+email_lists,id,uuid,NO,gen_random_uuid()
+email_lists,business_id,uuid,NO,null
+email_lists,name,text,NO,null
+email_lists,type,text,NO,'manual'::text
+email_lists,filter_definition,jsonb,YES,null
+email_lists,created_at,timestamp with time zone,NO,now()
+email_templates,id,uuid,NO,gen_random_uuid()
+email_templates,business_id,uuid,NO,null
+email_templates,name,text,NO,null
+email_templates,html_content,text,NO,null
+email_templates,created_at,timestamp with time zone,NO,now()
+email_templates,updated_at,timestamp with time zone,NO,now()
+event_types,key,text,NO,null
+event_types,label,text,NO,null
+event_types,description,text,YES,null
+inbox_settings,business_id,uuid,NO,null
+inbox_settings,away_message,text,YES,null
+inbox_settings,business_hours,jsonb,YES,null
+inbox_settings,auto_assignment_enabled,boolean,NO,false
+list_contacts,list_id,uuid,NO,null
+list_contacts,contact_id,uuid,NO,null
+messages,id,uuid,NO,gen_random_uuid()
+messages,conversation_id,uuid,NO,null
+messages,sender_type,text,NO,null
+messages,sender_member_id,uuid,YES,null
+messages,content,text,NO,null
+messages,media_url,text,YES,null
+messages,created_at,timestamp with time zone,NO,now()
+notification_settings,id,uuid,NO,gen_random_uuid()
+notification_settings,business_id,uuid,NO,null
+notification_settings,event_type,text,NO,null
+notification_settings,channel,text,NO,null
+notification_settings,enabled,boolean,NO,true
+notifications,id,uuid,NO,gen_random_uuid()
+notifications,business_id,uuid,NO,null
+notifications,member_id,uuid,YES,null
+notifications,type,text,NO,null
+notifications,title,text,NO,null
+notifications,body,text,YES,null
+notifications,read_at,timestamp with time zone,YES,null
+notifications,created_at,timestamp with time zone,NO,now()
+onboarding_steps,business_id,uuid,NO,null
+onboarding_steps,step,text,NO,null
+onboarding_steps,completed_at,timestamp with time zone,YES,null
+payments,id,uuid,NO,gen_random_uuid()
+payments,business_id,uuid,NO,null
+payments,subscription_id,uuid,NO,null
+payments,mercadopago_payment_id,text,NO,null
+payments,amount_cents,integer,NO,null
+payments,status,text,NO,null
+payments,paid_at,timestamp with time zone,YES,null
+payments,raw_payload,jsonb,YES,null
+payments,created_at,timestamp with time zone,NO,now()
+plans,id,uuid,NO,gen_random_uuid()
+plans,slug,text,NO,null
+plans,name,text,NO,null
+plans,price_cents,integer,NO,null
+plans,currency,text,NO,'PEN'::text
+plans,max_contacts,integer,NO,null
+plans,max_messages_month,integer,NO,null
+plans,max_accounts,integer,NO,null
+plans,max_campaigns_month,integer,NO,null
+plans,max_team_members,integer,NO,null
+plans,is_active,boolean,NO,true
+plans,created_at,timestamp with time zone,NO,now()
+plans,max_chatbots,integer,NO,0
+plans,max_automations,integer,NO,0
+plans,catalog_enabled,boolean,NO,false
+plans,email_enabled,boolean,NO,false
+products,id,uuid,NO,gen_random_uuid()
+products,business_id,uuid,NO,null
+products,category_id,uuid,YES,null
+products,name,text,NO,null
+products,description,text,YES,null
+products,price_cents,integer,YES,null
+products,images,ARRAY,NO,'{}'::text[]
+products,stock,integer,YES,null
+products,is_active,boolean,NO,true
+products,deleted_at,timestamp with time zone,YES,null
+products,created_at,timestamp with time zone,NO,now()
+products,updated_at,timestamp with time zone,NO,now()
+profiles,id,uuid,NO,null
+profiles,full_name,text,YES,null
+profiles,avatar_url,text,YES,null
+profiles,phone,text,YES,null
+profiles,created_at,timestamp with time zone,NO,now()
+social_account_secrets,social_account_id,uuid,NO,null
+social_account_secrets,access_token,text,NO,null
+social_account_secrets,refresh_token,text,YES,null
+social_accounts,id,uuid,NO,gen_random_uuid()
+social_accounts,business_id,uuid,NO,null
+social_accounts,platform,text,NO,null
+social_accounts,external_account_id,text,NO,null
+social_accounts,display_name,text,YES,null
+social_accounts,status,text,NO,'connected'::text
+social_accounts,connected_at,timestamp with time zone,NO,now()
+social_accounts,expires_at,timestamp with time zone,YES,null
+subscriptions,id,uuid,NO,gen_random_uuid()
+subscriptions,business_id,uuid,NO,null
+subscriptions,plan_id,uuid,NO,null
+subscriptions,status,text,NO,null
+subscriptions,mercadopago_subscription_id,text,YES,null
+subscriptions,mercadopago_payer_id,text,YES,null
+subscriptions,current_period_start,timestamp with time zone,YES,null
+subscriptions,current_period_end,timestamp with time zone,YES,null
+subscriptions,cancel_at,timestamp with time zone,YES,null
+subscriptions,created_at,timestamp with time zone,NO,now()
+subscriptions,updated_at,timestamp with time zone,NO,now()
+tags,id,uuid,NO,gen_random_uuid()
+tags,business_id,uuid,NO,null
+tags,name,text,NO,null
+tags,color,text,YES,null
+usage_counters,id,uuid,NO,gen_random_uuid()
+usage_counters,business_id,uuid,NO,null
+usage_counters,metric,text,NO,null
+usage_counters,period_month,date,NO,null
+usage_counters,count,integer,NO,0

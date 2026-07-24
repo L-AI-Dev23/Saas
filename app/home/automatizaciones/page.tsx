@@ -1,34 +1,31 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ChevronRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { KpiRow } from "@/components/dashboard/KpiCard";
 import { Button } from "@/components/animate-ui/components/buttons/button";
-import { ExecutionsChart } from "@/components/dashboard/ExecutionsChart";
-import { automatizacionesKpis, automatizacionesFallidas, automatizacionesEjecucionesPorDia } from "@/lib/mock-data";
-
-const RANGOS = [
-  { label: "7 días", dias: 7 },
-  { label: "30 días", dias: 30 },
-  { label: "90 días", dias: 90 },
-] as const;
+import { useAutomationRules } from "@/lib/automations-store";
+import { useEmailAutomatizaciones } from "@/lib/email-automatizaciones-store";
 
 export default function AutomatizacionesDashboardPage() {
-  const [rangoDias, setRangoDias] = useState(30);
+  const reglas = useAutomationRules();
+  const emailAutos = useEmailAutomatizaciones();
 
-  // Nota: el mock solo tiene 30 días de datos. Con datos reales, "90 días"
-  // haría un query distinto en vez de solo recortar el array.
-  const datosChart = automatizacionesEjecucionesPorDia.slice(
-    -Math.min(rangoDias, automatizacionesEjecucionesPorDia.length)
-  );
+  const activas = reglas.filter((r) => r.estado);
+  const emailActivas = emailAutos.filter((a) => a.estado === "Activa");
+
+  const kpis = [
+    { label: "Automatizaciones activas", value: activas.length.toString(), href: "/home/automatizaciones/activas" },
+    { label: "Email automatizaciones activas", value: emailActivas.length.toString(), href: "/home/email/automatizaciones" },
+    { label: "Total de reglas", value: (reglas.length + emailAutos.length).toString(), href: "/home/automatizaciones/activas" },
+  ];
 
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Automatizaciones"
-        description="Triggers basados en eventos de negocio, ejecutados con Trigger.dev."
+        description="Triggers basados en eventos de negocio."
         action={
           <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover" asChild>
             <Link href="/home/automatizaciones/activas">
@@ -38,60 +35,29 @@ export default function AutomatizacionesDashboardPage() {
         }
       />
 
-      <KpiRow items={automatizacionesKpis} />
-
-      <div id="ejecuciones-chart" className="mt-8 flex h-[320px] flex-col rounded-lg border border-border bg-white p-6 shadow-sg-sm scroll-mt-24">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-text-primary">Ejecuciones por día</h2>
-          <div className="flex gap-1 rounded-md bg-background p-1">
-            {RANGOS.map((r) => (
-              <button
-                key={r.dias}
-                onClick={() => setRangoDias(r.dias)}
-                className={
-                  rangoDias === r.dias
-                    ? "rounded px-2.5 py-1 text-xs font-medium bg-white text-text-primary shadow-sg-sm"
-                    : "rounded px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-                }
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="min-h-0 flex-1">
-          <ExecutionsChart data={datosChart} />
-        </div>
-      </div>
+      <KpiRow items={kpis} />
 
       <div className="mt-8 rounded-lg border border-border bg-white p-6 shadow-sg-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <AlertTriangle size={16} className="text-error" />
-          <h2 className="text-base font-semibold text-text-primary">Últimas ejecuciones fallidas</h2>
-        </div>
-        {automatizacionesFallidas.length === 0 ? (
+        <h2 className="mb-4 text-base font-semibold text-text-primary">Reglas activas</h2>
+        {activas.length === 0 ? (
           <p className="py-6 text-center text-sm text-text-muted">
-            Sin ejecuciones fallidas recientes 🎉
+            No tienes automatizaciones activas.{" "}
+            <Link href="/home/automatizaciones/activas" className="text-cta underline">
+              Crear una
+            </Link>
           </p>
         ) : (
-          <div className="divide-y divide-border">
-            {automatizacionesFallidas.map((f) => (
-              <Link
-                key={f.id}
-                href={f.href}
-                className="flex items-center justify-between gap-3 rounded-md py-3 pl-2 pr-2 transition-colors hover:bg-background"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium text-text-primary">{f.nombre}</p>
-                  <p className="text-xs text-text-secondary">{f.motivo}</p>
+          <ul className="divide-y divide-border">
+            {activas.map((r) => (
+              <li key={r.id} className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-medium text-text-primary">{r.nombre}</p>
+                  <p className="text-xs text-text-secondary">Evento: {r.evento}</p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-text-muted">{f.fecha}</span>
-                  <ChevronRight size={16} className="text-text-muted" />
-                </div>
-              </Link>
+                <span className="text-xs text-success font-semibold">Activa</span>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>

@@ -1,10 +1,19 @@
-import { ExternalLink } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+import { ExternalLink, Package } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { KpiRow } from "@/components/dashboard/KpiCard";
-import { catalogoKpis, productos } from "@/lib/mock-data";
+
+// Los KPIs de catálogo (visitas, clics) requieren analítica del sitio público
+// que aún no está conectada. Se muestran en cero para cuentas nuevas.
+const kpis = [
+  { label: "Visitas (mes)", value: "0" },
+  { label: "Clics a contacto", value: "0" },
+  { label: "Productos activos", value: "0" },
+];
 
 export default function CatalogoDashboardPage() {
-  const masVistos = [...productos].slice(0, 4);
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
@@ -19,20 +28,19 @@ export default function CatalogoDashboardPage() {
           </a>
         }
       />
-      <KpiRow items={catalogoKpis} />
+      <KpiRow items={kpis} />
 
       <div className="mt-8 rounded-lg border border-border bg-white p-6 shadow-sg-sm">
         <h2 className="mb-4 text-base font-semibold text-text-primary">Productos más vistos</h2>
-        <div className="divide-y divide-border">
-          {masVistos.map((p, i) => (
-            <div key={p.id} className="flex items-center justify-between py-3 text-sm">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-text-muted">#{i + 1}</span>
-                <span className="font-medium text-text-primary">{p.nombre}</span>
-              </div>
-              <span className="text-text-secondary">{p.precio}</span>
-            </div>
-          ))}
+        <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+          <Package size={28} className="text-text-muted" />
+          <p className="text-sm font-semibold text-text-primary">Aún no tienes productos</p>
+          <p className="text-sm text-text-secondary">
+            <Link href="/home/catalogo/productos" className="text-cta underline">
+              Agrega tu primer producto
+            </Link>{" "}
+            para que aparezca aquí.
+          </p>
         </div>
       </div>
     </div>
