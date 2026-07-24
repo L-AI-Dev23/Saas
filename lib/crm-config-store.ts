@@ -71,7 +71,7 @@ export function useEtapasCrm() {
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`crm-settings-etapas-${businessId}`)
+      .channel(`crm-settings-etapas-${businessId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "crm_settings", filter: `business_id=eq.${businessId}` },
@@ -104,7 +104,7 @@ export function useMostrarValorVenta() {
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`crm-settings-valor-${businessId}`)
+      .channel(`crm-settings-valor-${businessId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "crm_settings", filter: `business_id=eq.${businessId}` },
