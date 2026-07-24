@@ -18,10 +18,12 @@ import {
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { useTags, addTag, deleteTag, renameTag, type CrmTag } from "@/lib/tags-store";
 import { useContactos } from "@/lib/contacts-store";
+import { useBusiness } from "@/lib/supabase/business-context";
 
 const COLORES = ["#f65858", "#00c98d", "#009fc1", "#ca8a04", "#6b7280"];
 
 export default function EtiquetasPage() {
+  const { businessId } = useBusiness();
   const tags = useTags();
   const contactos = useContactos();
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -55,18 +57,18 @@ export default function EtiquetasPage() {
     setDialogAbierto(true);
   }
 
-  function guardar() {
+  async function guardar() {
     const nombreLimpio = nombre.trim();
-    if (!nombreLimpio) return;
+    if (!nombreLimpio || !businessId) return;
     if (tagEditando) {
-      renameTag(tagEditando.id, { nombre: nombreLimpio, color });
+      await renameTag(tagEditando.id, { nombre: nombreLimpio, color });
     } else {
-      addTag({ nombre: nombreLimpio, color });
+      await addTag({ nombre: nombreLimpio, color }, businessId);
     }
     setDialogAbierto(false);
   }
 
-  function eliminar(tag: CrmTag) {
+  async function eliminar(tag: CrmTag) {
     const enUso = conteos.get(tag.nombre) ?? 0;
     if (enUso > 0) {
       const confirmar = window.confirm(
@@ -74,7 +76,7 @@ export default function EtiquetasPage() {
       );
       if (!confirmar) return;
     }
-    deleteTag(tag.id);
+    await deleteTag(tag.id);
   }
 
   return (

@@ -1,0 +1,3 @@
+Ejecuta esto en la raíz del proyecto:
+
+npm install @supabase/supabase-js @supabase/ssr

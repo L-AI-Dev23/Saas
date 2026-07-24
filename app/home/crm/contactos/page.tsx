@@ -29,6 +29,7 @@ import {
 } from "@/lib/contacts-store";
 import { Tabs, TabList } from "@/components/application/tabs/tabs";
 import { TextArea } from "@/components/base/textarea/textarea";
+import { useBusiness } from "@/lib/supabase/business-context";
 
 const origenesFiltro = ["Todos los orígenes", ...origenesContacto];
 
@@ -41,11 +42,12 @@ export default function ContactosPage() {
 }
 
 function ContactosPageContent() {
+  const { businessId } = useBusiness();
   const contactos = useContactos();
   const etapas = useEtapasCrm();
   const etapasFiltro = useMemo(() => ["Todas las etapas", ...etapas.map((e) => e.label)], [etapas]);
   const [view, setView] = useState<"tabla" | "kanban">("tabla");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -74,15 +76,16 @@ function ContactosPageContent() {
     router.push("/home/crm/contactos");
   }
 
-  function eliminar(id: number) {
-    deleteContacto(id);
+  async function eliminar(id: string) {
+    await deleteContacto(id);
     if (selectedId === id) setSelectedId(null);
   }
 
-  if (selected) {
+  if (selected && businessId) {
     return (
       <ContactoDetalle
         contacto={selected}
+        businessId={businessId}
         onVolver={() => setSelectedId(null)}
         onEliminar={() => eliminar(selected.id)}
       />
@@ -112,7 +115,10 @@ function ContactosPageContent() {
                   <Plus size={16} /> Nuevo contacto
                 </Button>
               }
-              onSave={addContacto}
+              onSave={(data) => {
+                if (!businessId) return;
+                addContacto(data, businessId).catch((e) => alert(e.message));
+              }}
             />
           </div>
         }
@@ -272,10 +278,12 @@ function ContactosPageContent() {
 
 function ContactoDetalle({
   contacto,
+  businessId,
   onVolver,
   onEliminar,
 }: {
   contacto: Contacto;
+  businessId: string;
   onVolver: () => void;
   onEliminar: () => void;
 }) {
@@ -347,7 +355,7 @@ function ContactoDetalle({
                 >
                   {t}
                   <button
-                    onClick={() => removeTagFromContacto(contacto.id, t)}
+                    onClick={() => removeTagFromContacto(contacto.id, t, businessId)}
                     aria-label={`Quitar etiqueta ${t}`}
                     className="text-text-muted hover:text-error"
                   >
@@ -369,7 +377,7 @@ function ContactoDetalle({
                       <DropdownMenuItem
                         key={t}
                         className="cursor-pointer"
-                        onSelect={() => addTagToContacto(contacto.id, t)}
+                        onSelect={() => addTagToContacto(contacto.id, t, businessId)}
                       >
                         {t}
                       </DropdownMenuItem>

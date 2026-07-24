@@ -17,6 +17,8 @@
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-slot": "^1.2.5",
     "@react-stately/utils": "^3.12.1",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.8",
     "@untitledui/file-icons": "^0.0.9",
     "@untitledui/icons": "^0.0.22",
     "class-variance-authority": "^0.7.1",

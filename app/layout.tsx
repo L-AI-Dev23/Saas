@@ -3,6 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 import { AriaRouterProvider } from "@/components/providers/AriaRouterProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { BusinessProvider } from "@/lib/supabase/business-context";
 import "./globals.css";
 
 // Nota: la fuente "Onest" (extraída del styleguide) se carga vía @font-face
@@ -33,7 +34,9 @@ export default function RootLayout({
     <html lang="es" className={cn(GeistMono.variable)} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          <AriaRouterProvider>{children}</AriaRouterProvider>
+          <AriaRouterProvider>
+            <BusinessProvider>{children}</BusinessProvider>
+          </AriaRouterProvider>
         </ThemeProvider>
       </body>
     </html>
