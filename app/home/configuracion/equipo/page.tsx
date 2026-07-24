@@ -42,7 +42,7 @@ export default function EquipoPage() {
   const [email, setEmail] = useState("");
   const [rol, setRol] = useState<"admin" | "empleado">("empleado");
   const [modulos, setModulos] = useState<string[]>([]);
-  const [enviado, setEnviado] = useState<number | null>(null);
+  const [enviado, setEnviado] = useState<string | null>(null);
 
   const puedeGuardar = editando ? true : email.trim().length > 0;
 

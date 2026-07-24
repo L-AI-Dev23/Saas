@@ -1,6 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useBusiness } from "@/lib/supabase/business-context";
 
 export type EstadoDominio = "sin_configurar" | "pendiente" | "verificado";
 
@@ -20,9 +22,6 @@ export interface EmailConfig {
   registrosDns: RegistroDns[];
 }
 
-// Genera los registros DNS que Resend pediría para verificar un dominio propio.
-// Los valores del DKIM son ilustrativos: Resend entrega la clave pública real
-// recién cuando el dominio se agrega desde su API.
 function generarRegistrosDns(dominio: string): RegistroDns[] {
   return [
     { tipo: "TXT", host: `send.${dominio}`, valor: "v=spf1 include:amazonses.com ~all" },
@@ -31,7 +30,7 @@ function generarRegistrosDns(dominio: string): RegistroDns[] {
   ];
 }
 
-let config: EmailConfig = {
+const DEFAULT_CONFIG: EmailConfig = {
   nombreRemitente: "Codew Agencia",
   emailRemitente: "hola@codew.pe",
   replyTo: "",
@@ -40,44 +39,133 @@ let config: EmailConfig = {
   registrosDns: generarRegistrosDns("codew.pe"),
 };
 
-const listeners = new Set<() => void>();
+async function fetchEmailConfig(supabase: ReturnType<typeof createClient>, businessId: string): Promise<EmailConfig> {
+  const { data, error } = await supabase
+    .from("email_config")
+    .select("sender_name, sender_email, reply_to, domain, domain_status")
+    .eq("business_id", businessId)
+    .maybeSingle();
 
-function emit() {
-  listeners.forEach((l) => l());
+  if (error || !data) {
+    // Si no existe, creamos la fila inicial por defecto
+    await supabase.from("email_config").insert({
+      business_id: businessId,
+      sender_name: DEFAULT_CONFIG.nombreRemitente,
+      sender_email: DEFAULT_CONFIG.emailRemitente,
+      reply_to: DEFAULT_CONFIG.replyTo || null,
+      domain: DEFAULT_CONFIG.dominio || null,
+      domain_status: "none", // none maps to sin_configurar / pendiente
+    });
+    return DEFAULT_CONFIG;
+  }
+
+  // Mapeamos domain_status de db a EstadoDominio
+  let estadoDominio: EstadoDominio = "sin_configurar";
+  if (data.domain_status === "verified") {
+    estadoDominio = "verificado";
+  } else if (data.domain) {
+    estadoDominio = "pendiente";
+  }
+
+  return {
+    nombreRemitente: data.sender_name ?? "",
+    emailRemitente: data.sender_email ?? "",
+    replyTo: data.reply_to ?? "",
+    dominio: data.domain ?? "",
+    estadoDominio,
+    registrosDns: data.domain ? generarRegistrosDns(data.domain) : [],
+  };
 }
 
 export function useEmailConfig() {
-  return useSyncExternalStore(
-    (onChange) => {
-      listeners.add(onChange);
-      return () => listeners.delete(onChange);
-    },
-    () => config,
-    () => config
-  );
+  const { businessId } = useBusiness();
+  const [config, setConfig] = useState<EmailConfig>(DEFAULT_CONFIG);
+
+  const reload = useCallback(async () => {
+    if (!businessId) return;
+    const supabase = createClient();
+    setConfig(await fetchEmailConfig(supabase, businessId));
+  }, [businessId]);
+
+  useEffect(() => {
+    reload();
+    if (!businessId) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`email-config-${businessId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "email_config", filter: `business_id=eq.${businessId}` },
+        () => reload()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [businessId, reload]);
+
+  return config;
 }
 
-export function updateRemitente(data: { nombreRemitente: string; emailRemitente: string; replyTo: string }) {
-  config = { ...config, ...data };
-  emit();
+async function getActiveBusinessId(supabase: ReturnType<typeof createClient>) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: membership } = await supabase
+    .from("business_members")
+    .select("business_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .order("joined_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return membership?.business_id ?? null;
 }
 
-// Registra un dominio nuevo (o reemplaza el actual) y genera sus registros DNS pendientes.
-export function agregarDominio(dominio: string) {
+export async function updateRemitente(data: { nombreRemitente: string; emailRemitente: string; replyTo: string }) {
+  const supabase = createClient();
+  const businessId = await getActiveBusinessId(supabase);
+  if (!businessId) return;
+
+  await supabase
+    .from("email_config")
+    .update({
+      sender_name: data.nombreRemitente,
+      sender_email: data.emailRemitente,
+      reply_to: data.replyTo || null,
+    })
+    .eq("business_id", businessId);
+}
+
+export async function agregarDominio(dominio: string) {
   const limpio = dominio.trim().toLowerCase();
   if (!limpio) return;
-  config = {
-    ...config,
-    dominio: limpio,
-    estadoDominio: "pendiente",
-    registrosDns: generarRegistrosDns(limpio),
-  };
-  emit();
+
+  const supabase = createClient();
+  const businessId = await getActiveBusinessId(supabase);
+  if (!businessId) return;
+
+  await supabase
+    .from("email_config")
+    .update({
+      domain: limpio,
+      domain_status: "pending",
+    })
+    .eq("business_id", businessId);
 }
 
-// Simula la verificación contra Resend. En producción esto llama a la API de
-// Resend, que resuelve los registros DNS reales del dominio.
-export function verificarDominio() {
-  config = { ...config, estadoDominio: "verificado" };
-  emit();
+export async function verificarDominio() {
+  const supabase = createClient();
+  const businessId = await getActiveBusinessId(supabase);
+  if (!businessId) return;
+
+  await supabase
+    .from("email_config")
+    .update({
+      domain_status: "verified",
+    })
+    .eq("business_id", businessId);
 }

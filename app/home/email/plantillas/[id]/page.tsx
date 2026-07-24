@@ -13,7 +13,7 @@ import { useEmailPlantillas, updateEmailPlantilla, deleteEmailPlantilla } from "
 export default function EmailPlantillaDetallePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const id = Number(params.id);
+  const id = params.id;
 
   const plantillas = useEmailPlantillas();
   const plantilla = plantillas.find((p) => p.id === id);
@@ -44,7 +44,7 @@ function EditorPlantilla({
   asunto: asuntoInicial,
   cuerpo: cuerpoInicial,
 }: {
-  id: number;
+  id: string;
   nombre: string;
   asunto: string;
   cuerpo: string;

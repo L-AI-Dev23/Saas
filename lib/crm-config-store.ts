@@ -1,66 +1,193 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useBusiness } from "@/lib/supabase/business-context";
 
 export interface EtapaCrm {
   key: string;
   label: string;
 }
 
-// Las 4 etapas son fijas (el key no cambia), pero el label es editable desde
-// Configuración de CRM y se refleja en Contactos y en el modal de nuevo contacto.
-let etapas: EtapaCrm[] = [
+const DEFAULT_ETAPAS = [
   { key: "nuevo", label: "Nuevo" },
   { key: "en_conversacion", label: "En conversación" },
   { key: "cliente", label: "Cliente" },
   { key: "inactivo", label: "Inactivo" },
 ];
 
-let mostrarValorVenta = false;
+async function fetchCrmSettings(supabase: ReturnType<typeof createClient>, businessId: string) {
+  let { data, error } = await supabase
+    .from("crm_settings")
+    .select("stage_labels, show_value_field")
+    .eq("business_id", businessId)
+    .maybeSingle();
 
-const listeners = new Set<() => void>();
+  if (error || !data) {
+    // Si no existe, creamos los valores por defecto
+    const defaultLabels = {
+      nuevo: "Nuevo",
+      en_conversacion: "En conversación",
+      cliente: "Cliente",
+      inactivo: "Inactivo",
+    };
+    await supabase.from("crm_settings").insert({
+      business_id: businessId,
+      stage_labels: defaultLabels,
+      show_value_field: false,
+    });
+    return {
+      etapas: DEFAULT_ETAPAS,
+      mostrarValorVenta: false,
+    };
+  }
 
-function emit() {
-  listeners.forEach((l) => l());
-}
+  const labels = data.stage_labels as Record<string, string>;
+  const etapas = DEFAULT_ETAPAS.map((e) => ({
+    key: e.key,
+    label: labels[e.key] ?? e.label,
+  }));
 
-function subscribe(onChange: () => void) {
-  listeners.add(onChange);
-  return () => listeners.delete(onChange);
+  return {
+    etapas,
+    mostrarValorVenta: data.show_value_field,
+  };
 }
 
 export function useEtapasCrm() {
-  return useSyncExternalStore(
-    subscribe,
-    () => etapas,
-    () => etapas
-  );
+  const { businessId } = useBusiness();
+  const [etapas, setEtapas] = useState<EtapaCrm[]>(DEFAULT_ETAPAS);
+
+  const reload = useCallback(async () => {
+    if (!businessId) return;
+    const supabase = createClient();
+    const settings = await fetchCrmSettings(supabase, businessId);
+    setEtapas(settings.etapas);
+  }, [businessId]);
+
+  useEffect(() => {
+    reload();
+    if (!businessId) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`crm-settings-etapas-${businessId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "crm_settings", filter: `business_id=eq.${businessId}` },
+        () => reload()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [businessId, reload]);
+
+  return etapas;
 }
 
 export function useMostrarValorVenta() {
-  return useSyncExternalStore(
-    subscribe,
-    () => mostrarValorVenta,
-    () => mostrarValorVenta
-  );
+  const { businessId } = useBusiness();
+  const [mostrarValorVenta, setMostrarValorVenta] = useState<boolean>(false);
+
+  const reload = useCallback(async () => {
+    if (!businessId) return;
+    const supabase = createClient();
+    const settings = await fetchCrmSettings(supabase, businessId);
+    setMostrarValorVenta(settings.mostrarValorVenta);
+  }, [businessId]);
+
+  useEffect(() => {
+    reload();
+    if (!businessId) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`crm-settings-valor-${businessId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "crm_settings", filter: `business_id=eq.${businessId}` },
+        () => reload()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [businessId, reload]);
+
+  return mostrarValorVenta;
 }
 
-export function setEtapaLabel(key: string, label: string) {
-  etapas = etapas.map((e) => (e.key === key ? { ...e, label } : e));
-  emit();
+async function getActiveBusinessId(supabase: ReturnType<typeof createClient>) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: membership } = await supabase
+    .from("business_members")
+    .select("business_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .order("joined_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return membership?.business_id ?? null;
 }
 
-export function setEtapasLabels(labels: Record<string, string>) {
-  etapas = etapas.map((e) => (labels[e.key] !== undefined ? { ...e, label: labels[e.key] } : e));
-  emit();
+export async function setEtapaLabel(key: string, label: string) {
+  const supabase = createClient();
+  const businessId = await getActiveBusinessId(supabase);
+  if (!businessId) return;
+
+  const { data } = await supabase
+    .from("crm_settings")
+    .select("stage_labels")
+    .eq("business_id", businessId)
+    .single();
+
+  const labels = { ...(data?.stage_labels as Record<string, string> || {}) };
+  labels[key] = label;
+
+  await supabase
+    .from("crm_settings")
+    .update({ stage_labels: labels })
+    .eq("business_id", businessId);
 }
 
-export function setMostrarValorVenta(value: boolean) {
-  mostrarValorVenta = value;
-  emit();
+export async function setEtapasLabels(labels: Record<string, string>) {
+  const supabase = createClient();
+  const businessId = await getActiveBusinessId(supabase);
+  if (!businessId) return;
+
+  const { data } = await supabase
+    .from("crm_settings")
+    .select("stage_labels")
+    .eq("business_id", businessId)
+    .single();
+
+  const currentLabels = { ...(data?.stage_labels as Record<string, string> || {}) };
+  const nextLabels = { ...currentLabels, ...labels };
+
+  await supabase
+    .from("crm_settings")
+    .update({ stage_labels: nextLabels })
+    .eq("business_id", businessId);
 }
 
-// Snapshot no-reactivo, útil cuando se necesita el label fuera de un componente React.
+export async function setMostrarValorVenta(value: boolean) {
+  const supabase = createClient();
+  const businessId = await getActiveBusinessId(supabase);
+  if (!businessId) return;
+
+  await supabase
+    .from("crm_settings")
+    .update({ show_value_field: value })
+    .eq("business_id", businessId);
+}
+
 export function getEtapas() {
-  return etapas;
+  // Retorna las etapas por defecto de forma estática o se espera a que se carguen reactivamente.
+  return DEFAULT_ETAPAS;
 }

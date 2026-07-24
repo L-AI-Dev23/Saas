@@ -14,7 +14,7 @@ function pct(parte: number, total: number) {
 export default function ReporteCampanaPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const id = Number(params.id);
+  const id = params.id;
 
   const campanas = useEmailCampanas();
   const campana = campanas.find((c) => c.id === id);

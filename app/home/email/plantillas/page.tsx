@@ -22,16 +22,16 @@ export default function EmailPlantillasPage() {
   const plantillas = useEmailPlantillas();
   const router = useRouter();
 
-  function crearYEditar() {
-    const id = addEmailPlantilla();
+  async function crearYEditar() {
+    const id = await addEmailPlantilla();
     router.push(`/home/email/plantillas/${id}`);
   }
 
-  function duplicar(id: number) {
+  function duplicar(id: string) {
     duplicateEmailPlantilla(id);
   }
 
-  function eliminar(id: number, nombre: string) {
+  function eliminar(id: string, nombre: string) {
     const confirmar = window.confirm(`¿Eliminar la plantilla "${nombre}"? Esta acción no se puede deshacer.`);
     if (!confirmar) return;
     deleteEmailPlantilla(id);
