@@ -23,11 +23,36 @@ const ONBOARDING_STEPS = [
   { step: "first_automation", label: "Crea tu primera automatización", href: "/home/automatizaciones/activas" },
 ];
 
+import { motion } from "motion/react";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
+import { Label } from "@/components/ui/label";
+
+const getPathAnimate = (isChecked: boolean) => ({
+  pathLength: isChecked ? 1 : 0,
+  opacity: isChecked ? 1 : 0,
+});
+
+const getPathTransition = (isChecked: boolean): any => ({
+  pathLength: { duration: 0.8, ease: "easeInOut" },
+  opacity: {
+    duration: 0.01,
+    delay: isChecked ? 0 : 0.8,
+  },
+});
+
 export default function HomePage() {
   const [rangoDias, setRangoDias] = useState(30);
   const contactos = useContactos();
   const campanas = useEmailCampanas();
   const automatizaciones = useAutomationRules();
+
+  // Guardamos un estado local para saber qué checkboxes se han marcado manualmente
+  const [completadosManuales, setCompletadosManuales] = useState<Record<string, boolean>>({
+    add_contact: false,
+    add_product: false,
+    first_campaign: false,
+    first_automation: false,
+  });
 
   // Construimos KPIs a partir de datos reales
   const kpis = [
@@ -50,14 +75,7 @@ export default function HomePage() {
     };
   });
 
-  const completados = ONBOARDING_STEPS.filter((s) => {
-    if (s.step === "add_contact") return contactos.length > 0;
-    if (s.step === "add_product") return false; // Se integrará con catálogo real
-    if (s.step === "first_campaign") return campanas.length > 0;
-    if (s.step === "first_automation") return automatizaciones.length > 0;
-    return false;
-  });
-  const pendientes = ONBOARDING_STEPS.filter((s) => !completados.find((c) => c.step === s.step));
+  const conteoCompletados = Object.values(completadosManuales).filter(Boolean).length;
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -66,42 +84,67 @@ export default function HomePage() {
         description="Esto es lo que pasó en tu negocio hoy y esta semana, en todos los módulos."
       />
 
-      {pendientes.length > 0 && (
-        <div className="mb-8 rounded-lg border border-border bg-surface p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">
-              Completa tu configuración inicial
-            </h2>
-            <span className="text-sm font-medium text-text-secondary">
-              {completados.length}/{ONBOARDING_STEPS.length} completados
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {ONBOARDING_STEPS.map((step) => {
-              const done = !!completados.find((c) => c.step === step.step);
-              return done ? (
-                <div
-                  key={step.step}
-                  className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-sg-sm"
-                >
-                  <CheckCircle2 size={18} className="shrink-0 text-cta" />
-                  <span className="text-sm text-text-muted line-through">{step.label}</span>
-                </div>
-              ) : (
-                <Link
-                  key={step.step}
-                  href={step.href}
-                  className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-sg-sm transition-shadow hover:shadow-sg-md"
-                >
-                  <Circle size={18} className="shrink-0 text-text-muted" />
-                  <span className="text-sm font-medium text-text-primary">{step.label}</span>
-                  <ArrowRight size={16} className="ml-auto shrink-0 text-cta" />
-                </Link>
-              );
-            })}
-          </div>
+      <div className="mb-8 rounded-lg border border-border bg-surface p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-text-primary">
+            Completa tu configuración inicial
+          </h2>
+          <span className="text-sm font-medium text-text-secondary">
+            {conteoCompletados}/{ONBOARDING_STEPS.length} completados
+          </span>
         </div>
-      )}
+        <div className="flex flex-col gap-2">
+          {ONBOARDING_STEPS.map((step) => {
+            const isChecked = !!completadosManuales[step.step];
+            return (
+              <div
+                key={step.step}
+                className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-sg-sm transition-shadow hover:shadow-sg-md"
+              >
+                <Checkbox
+                  variant="accent"
+                  checked={isChecked}
+                  onCheckedChange={(val) => {
+                    setCompletadosManuales((prev) => ({
+                      ...prev,
+                      [step.step]: val === true,
+                    }));
+                  }}
+                  id={`checkbox-${step.step}`}
+                />
+                <div className="relative inline-block flex-1">
+                  <Label
+                    htmlFor={`checkbox-${step.step}`}
+                    className="text-sm font-medium text-text-primary cursor-pointer select-none"
+                  >
+                    {step.label}
+                  </Label>
+                  <motion.svg
+                    width="340"
+                    height="32"
+                    viewBox="0 0 340 32"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none z-20 w-full h-10"
+                    preserveAspectRatio="none"
+                  >
+                    <motion.path
+                      d="M 5 16.91 s 79.8 -11.36 98.1 -11.34 c 22.2 0.02 -47.82 14.25 -33.39 22.02 c 12.61 6.77 124.18 -27.98 133.31 -17.28 c 7.52 8.38 -26.8 20.02 4.61 22.05 c 24.55 1.93 113.37 -20.36 113.37 -20.36"
+                      vectorEffect="non-scaling-stroke"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeMiterlimit={10}
+                      fill="none"
+                      initial={false}
+                      animate={getPathAnimate(isChecked)}
+                      transition={getPathTransition(isChecked)}
+                      className="stroke-cta"
+                    />
+                  </motion.svg>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <KpiRow items={kpis} />
 
