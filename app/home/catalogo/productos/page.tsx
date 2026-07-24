@@ -20,65 +20,66 @@ const categorias: { id: string; nombre: string }[] = [];
 export default function ProductosPage() {
   const nombresCategorias = categorias.map((c) => c.nombre);
   const [categoria, setCategoria] = useState(nombresCategorias[0] ?? "Sin categoría");
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader
-        title="Productos"
-        description="El catálogo que se muestra en tu página pública y que tus chatbots pueden ofrecer."
-        action={
-          <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <PageHeader
+          title="Productos"
+          description="El catálogo que se muestra en tu página pública y que tus chatbots pueden ofrecer."
+          action={
             <DialogTrigger asChild>
               <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover">
                 <Plus size={16} /> Nuevo producto
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nuevo producto</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col gap-4 py-2">
-                <div className="flex flex-col gap-1.5">
-                  <Label>Nombre</Label>
-                  <Input placeholder="Ej. Curso de Excel Avanzado" />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Descripción</Label>
-                  <TextArea rows={3} aria-label="Descripción" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label>Precio (S/)</Label>
-                    <Input type="number" placeholder="129" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label>Categoría</Label>
-                    <SelectDropdown
-                      options={nombresCategorias.length > 0 ? nombresCategorias : ["Sin categoría"]}
-                      value={categoria}
-                      onChange={setCategoria}
-                    />
-                  </div>
-                </div>
-                <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                  <Checkbox defaultChecked />
-                  Sin control de stock
-                </label>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Imágenes</Label>
-                  <FileUploadDropZone accept="image/*" hint="SVG, PNG, JPG o GIF (máx. 5MB)" maxSize={5 * 1024 * 1024} />
-                </div>
+          }
+        />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuevo producto</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label>Nombre</Label>
+              <Input placeholder="Ej. Curso de Excel Avanzado" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Descripción</Label>
+              <TextArea rows={3} aria-label="Descripción" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label>Precio (S/)</Label>
+                <Input type="number" placeholder="129" />
               </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
-                </DialogClose>
-                <Button className="bg-cta text-white hover:bg-cta-hover">Guardar producto</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        }
-      />
+              <div className="flex flex-col gap-1.5">
+                <Label>Categoría</Label>
+                <SelectDropdown
+                  options={nombresCategorias.length > 0 ? nombresCategorias : ["Sin categoría"]}
+                  value={categoria}
+                  onChange={setCategoria}
+                />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+              <Checkbox defaultChecked />
+              Sin control de stock
+            </label>
+            <div className="flex flex-col gap-1.5">
+              <Label>Imágenes</Label>
+              <FileUploadDropZone accept="image/*" hint="SVG, PNG, JPG o GIF (máx. 5MB)" maxSize={5 * 1024 * 1024} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button className="bg-cta text-white hover:bg-cta-hover">Guardar producto</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {productos.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
@@ -89,11 +90,9 @@ export default function ProductosPage() {
           <p className="mt-1 max-w-sm text-sm text-text-secondary">
             Agrega tu primer producto para que aparezca en tu catálogo público y tus chatbots puedan ofrecerlo.
           </p>
-          <DialogTrigger asChild>
-            <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover">
-              <Plus size={16} /> Nuevo producto
-            </Button>
-          </DialogTrigger>
+          <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover" onClick={() => setOpen(true)}>
+            <Plus size={16} /> Nuevo producto
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

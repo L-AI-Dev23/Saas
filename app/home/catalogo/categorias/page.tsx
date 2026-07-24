@@ -16,44 +16,45 @@ const categorias: never[] = [];
 
 export default function CategoriasPage() {
   const [padre, setPadre] = useState(SIN_PADRE);
+  const [open, setOpen] = useState(false);
   const opcionesPadre = [SIN_PADRE, ...categorias.map((c: any) => c.nombre)];
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title="Categorías"
-        description="Organiza tus productos jerárquicamente."
-        action={
-          <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <PageHeader
+          title="Categorías"
+          description="Organiza tus productos jerárquicamente."
+          action={
             <DialogTrigger asChild>
               <Button className="rounded-lg bg-cta text-white hover:bg-cta-hover">
                 <Plus size={16} /> Nueva categoría
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nueva categoría</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col gap-4 py-2">
-                <div className="flex flex-col gap-1.5">
-                  <Label>Nombre</Label>
-                  <Input placeholder="Ej. Excel" />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Categoría padre (opcional)</Label>
-                  <SelectDropdown options={opcionesPadre} value={padre} onChange={setPadre} />
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
-                </DialogClose>
-                <Button className="bg-cta text-white hover:bg-cta-hover">Crear categoría</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        }
-      />
+          }
+        />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nueva categoría</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label>Nombre</Label>
+              <Input placeholder="Ej. Excel" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Categoría padre (opcional)</Label>
+              <SelectDropdown options={opcionesPadre} value={padre} onChange={setPadre} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button className="bg-cta text-white hover:bg-cta-hover">Crear categoría</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {categorias.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-white px-6 py-16 text-center">
@@ -64,11 +65,9 @@ export default function CategoriasPage() {
           <p className="mt-1 max-w-sm text-sm text-text-secondary">
             Crea categorías para organizar tus productos de forma ordenada y estructurada.
           </p>
-          <DialogTrigger asChild>
-            <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover">
-              <Plus size={16} /> Nueva categoría
-            </Button>
-          </DialogTrigger>
+          <Button className="mt-4 rounded-lg bg-cta text-white hover:bg-cta-hover" onClick={() => setOpen(true)}>
+            <Plus size={16} /> Nueva categoría
+          </Button>
         </div>
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border bg-white">
