@@ -1,17 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/animate-ui/components/buttons/button";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Toggle } from "@/components/base/toggle/toggle";
-import { notificacionesConfig } from "@/lib/mock-data";
+import { useNotificacionesConfig, toggleNotificacion } from "@/lib/notificaciones-store";
 
 export default function NotificacionesPage() {
-  const [config, setConfig] = useState(notificacionesConfig);
-
-  const toggle = (evento: string, canal: "inapp" | "email") => {
-    setConfig((prev) => prev.map((n) => (n.evento === evento ? { ...n, [canal]: !n[canal] } : n)));
-  };
+  const config = useNotificacionesConfig();
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -32,12 +26,20 @@ export default function NotificacionesPage() {
                 <td className="px-5 py-3 font-medium text-text-primary">{n.evento}</td>
                 <td className="px-5 py-3">
                   <div className="flex justify-center">
-                    <Toggle isSelected={n.inapp} onChange={() => toggle(n.evento, "inapp")} aria-label={`${n.evento} in-app`} />
+                    <Toggle
+                      isSelected={n.inapp}
+                      onChange={() => toggleNotificacion(n.evento, "inapp")}
+                      aria-label={`${n.evento} in-app`}
+                    />
                   </div>
                 </td>
                 <td className="px-5 py-3">
                   <div className="flex justify-center">
-                    <Toggle isSelected={n.email} onChange={() => toggle(n.evento, "email")} aria-label={`${n.evento} email`} />
+                    <Toggle
+                      isSelected={n.email}
+                      onChange={() => toggleNotificacion(n.evento, "email")}
+                      aria-label={`${n.evento} email`}
+                    />
                   </div>
                 </td>
               </tr>
@@ -46,7 +48,7 @@ export default function NotificacionesPage() {
         </table>
       </div>
 
-      <Button className="mt-6 bg-cta text-white hover:bg-cta-hover">Guardar cambios</Button>
+      <p className="mt-3 text-xs text-text-muted">Los cambios se guardan automáticamente.</p>
     </div>
   );
 }
